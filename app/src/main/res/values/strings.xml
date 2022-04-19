@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">AlgoCarsharing</string>
+    <string name="app_name">Algorand Carsharing</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Android Studio</string>
@@ -9,5 +9,11 @@
 
     <string name="menu_home">Home</string>
     <string name="menu_gallery">Gallery</string>
-    <string name="menu_slideshow">Slideshow</string>
+    <string name="menu_account">Account</string>
+
+    <string name="preferences_account">preferences_account</string>
+    <string name="total_balance">Total Balance</string>
+    <string name="account_address">Account Address</string>
+
+    <string name="env_transaction_note">67c8df8c4a6ef03decdfd0f174d16641</string>
 </resources>

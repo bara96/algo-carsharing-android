@@ -1,6 +1,6 @@
 # Algorand Carsharing Android
 Smart Contract developed in [PyTeal](https://developer.algorand.org/docs/get-details/dapps/pyteal/) to build a dApp for car sharing in Algorand Blockchain.
-Application developed in [Kotlin](https://kotlinlang.org/).
+Application developed in Java.
 Linked to [Algorand Carsharing Python](https://github.com/bara96/algo-carsharing-python) project.
 
 # Requirements
@@ -21,5 +21,4 @@ On testnet the indexer is not enabled, in order to use it you can switch on rele
 - `./sandbox up release`
 
 ## Environment and dependencies
-- Rename `.env.example` into `.env`
 - For this project an Android emulator with `API 30` are used
