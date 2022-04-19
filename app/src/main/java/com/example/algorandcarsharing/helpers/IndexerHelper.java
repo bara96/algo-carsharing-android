@@ -14,15 +14,15 @@ import org.json.JSONObject;
 public class IndexerHelper {
 
     protected Context context;
-    protected IndexerClient indexerClient;
-    protected String indexerAddress = "10.0.2.2";
-    protected int indexerPort = 8980;
+    protected IndexerClient client;
+    protected String clientAddress = "10.0.2.2";
+    protected int clientPort = 8980;
     protected String transactionNote;
 
-    public IndexerHelper(Context context, String indexerAddress, int indexerPort) {
-        this.indexerAddress = indexerAddress;
-        this.indexerPort = indexerPort;
-        this.indexerClient = this.connectToClient();
+    public IndexerHelper(Context context, String clientAddress, int clientPort) {
+        this.clientAddress = clientAddress;
+        this.clientPort = clientPort;
+        this.client = this.connectToClient();
         this.context = context;
         this.transactionNote = context.getString(R.string.preferences_account);
     }
@@ -30,7 +30,7 @@ public class IndexerHelper {
     public IndexerHelper(Context context) {
         this.context = context;
         this.transactionNote = context.getString(R.string.preferences_account);
-        this.indexerClient = this.connectToClient();
+        this.client = this.connectToClient();
     }
 
     /**
@@ -38,15 +38,15 @@ public class IndexerHelper {
      * @return Client
      */
     private IndexerClient connectToClient() {
-        return new IndexerClient(this.indexerAddress, this.indexerPort);
+        return new IndexerClient(this.clientAddress, this.clientPort);
     }
 
-    public IndexerClient getIndexerClient() {
-        return indexerClient;
+    public IndexerClient getClient() {
+        return client;
     }
 
     public JSONObject searchTransactions() throws Exception {
-        Response<TransactionsResponse> response = this.indexerClient
+        Response<TransactionsResponse> response = this.client
                 .searchForTransactions()
                 .notePrefix(this.transactionNote.getBytes())
                 .txType(Enums.TxType.APPL)
