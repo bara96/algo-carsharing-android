@@ -1,6 +1,7 @@
 package com.example.algorandcarsharing;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -50,6 +51,9 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(binding.appBarMain.toolbar);
         binding.appBarMain.fab.setOnClickListener(view -> {
+            Intent intent = new Intent(this, TripCreate.class);
+            startActivity(intent);
+            /*
             mExecutor.execute(() -> {
                 JSONObject response = null;
                 try {
@@ -61,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.e("Indexer Error", e.getMessage());
                 }
             });
+             */
         });
 
         DrawerLayout drawer = binding.drawerLayout;
