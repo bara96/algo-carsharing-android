@@ -7,7 +7,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -15,11 +14,9 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.algorandcarsharing.R;
 import com.example.algorandcarsharing.databinding.FragmentAccountBinding;
-import com.example.algorandcarsharing.helpers.ApplicationHelper;
+import com.example.algorandcarsharing.clients.ApplicationService;
 import com.google.android.material.snackbar.Snackbar;
 
-import java.util.Arrays;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -29,7 +26,7 @@ public class AccountFragment extends Fragment {
     private long balance = 0;
     private String address = null;
 
-    private ApplicationHelper applicationHelper;
+    private ApplicationService applicationService;
     private View rootView;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -39,7 +36,7 @@ public class AccountFragment extends Fragment {
         Context context = getActivity();
         ExecutorService mExecutor = Executors.newSingleThreadExecutor();
 
-        applicationHelper = new ApplicationHelper(context);
+        applicationService = new ApplicationService(context);
 
         binding = FragmentAccountBinding.inflate(inflater, container, false);
         rootView = binding.getRoot();
@@ -55,7 +52,7 @@ public class AccountFragment extends Fragment {
                     if(address != null) {
                         mExecutor.execute(() -> {
                             try {
-                                balance = applicationHelper.getBalance(address);
+                                balance = applicationService.getBalance(address);
                                 saveAccountData();
                                 requireActivity().runOnUiThread(() -> binding.balanceTv.setText(String.valueOf(balance)));
                             }

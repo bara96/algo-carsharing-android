@@ -12,10 +12,16 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/nav_gallery"
-        android:name="com.example.algorandcarsharing.fragments.gallery.GalleryFragment"
-        android:label="@string/menu_gallery"
-        tools:layout="@layout/fragment_gallery" />
+        android:id="@+id/nav_trips_created"
+        android:name="com.example.algorandcarsharing.fragments.trips.created.TripsFragment"
+        android:label="@string/menu_trips_created"
+        tools:layout="@layout/fragment_trips_created" />
+
+    <fragment
+        android:id="@+id/nav_trips_joined"
+        android:name="com.example.algorandcarsharing.fragments.trips.joined.TripsFragment"
+        android:label="@string/menu_trips_joined"
+        tools:layout="@layout/fragment_trips_joined" />
 
     <fragment
         android:id="@+id/nav_account"

@@ -16,7 +16,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.example.algorandcarsharing.databinding.ActivityMainBinding;
-import com.example.algorandcarsharing.helpers.IndexerHelper;
+import com.example.algorandcarsharing.clients.IndexerService;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -24,7 +24,6 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.json.JSONObject;
 
 import java.security.Security;
-import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -33,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private AppBarConfiguration mAppBarConfiguration;
     private ActivityMainBinding binding;
 
-    private IndexerHelper indexerHelper;
+    private IndexerService indexerService;
 
     private NavController navController;
 
@@ -44,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
         Security.insertProviderAt(new BouncyCastleProvider(), 0);
 
         ExecutorService mExecutor = Executors.newSingleThreadExecutor();
-        indexerHelper = new IndexerHelper(this);
+        indexerService = new IndexerService(this);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -54,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
             mExecutor.execute(() -> {
                 JSONObject response = null;
                 try {
-                    response = indexerHelper.searchTransactions();
+                    response = indexerService.searchTransactions();
                     Log.d("Indexer Response", response.toString(2));
                     Snackbar.make(view, "Indexer searchTransactions", Snackbar.LENGTH_LONG).show();
                 }
@@ -69,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_account)
+                R.id.nav_home, R.id.nav_trips_created, R.id.nav_trips_joined, R.id.nav_account)
                 .setOpenableLayout(drawer)
                 .build();
         navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);

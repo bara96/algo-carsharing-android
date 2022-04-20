@@ -1,4 +1,4 @@
-package com.example.algorandcarsharing.helpers;
+package com.example.algorandcarsharing.clients;
 
 import android.content.Context;
 import android.util.Log;
@@ -10,7 +10,7 @@ import com.algorand.algosdk.v2.client.model.Account;
 import com.example.algorandcarsharing.R;
 
 
-public class ApplicationHelper {
+public class ApplicationService {
 
     protected Context context;
     protected AlgodClient client;
@@ -19,7 +19,7 @@ public class ApplicationHelper {
     protected int clientPort = 4001;
     protected String transactionNote;
 
-    public ApplicationHelper(Context context, String clientAddress, int clientPort, String clientToken) {
+    public ApplicationService(Context context, String clientAddress, int clientPort, String clientToken) {
         this.context = context;
         this.transactionNote = context.getString(R.string.preferences_account);
 
@@ -29,7 +29,7 @@ public class ApplicationHelper {
         this.client = this.connectToClient();
     }
 
-    public ApplicationHelper(Context context) {
+    public ApplicationService(Context context) {
         this.context = context;
         this.transactionNote = context.getString(R.string.preferences_account);
 

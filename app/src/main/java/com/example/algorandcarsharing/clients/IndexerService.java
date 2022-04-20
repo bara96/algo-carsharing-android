@@ -1,4 +1,4 @@
-package com.example.algorandcarsharing.helpers;
+package com.example.algorandcarsharing.clients;
 
 import android.content.Context;
 
@@ -11,7 +11,7 @@ import com.example.algorandcarsharing.R;
 import org.json.JSONObject;
 
 
-public class IndexerHelper {
+public class IndexerService {
 
     protected Context context;
     protected IndexerClient client;
@@ -19,7 +19,7 @@ public class IndexerHelper {
     protected int clientPort = 8980;
     protected String transactionNote;
 
-    public IndexerHelper(Context context, String clientAddress, int clientPort) {
+    public IndexerService(Context context, String clientAddress, int clientPort) {
         this.clientAddress = clientAddress;
         this.clientPort = clientPort;
         this.client = this.connectToClient();
@@ -27,7 +27,7 @@ public class IndexerHelper {
         this.transactionNote = context.getString(R.string.preferences_account);
     }
 
-    public IndexerHelper(Context context) {
+    public IndexerService(Context context) {
         this.context = context;
         this.transactionNote = context.getString(R.string.preferences_account);
         this.client = this.connectToClient();
