@@ -60,13 +60,13 @@ public class ApplicationService {
                 try {
                     Address pk = new Address(address);
 
-                    Response<Account> respAcct = client.AccountInformation(pk).execute();
-                    if (!respAcct.isSuccessful()) {
-                        throw new Exception(respAcct.message());
+                    Response<Account> response = client.AccountInformation(pk).execute();
+                    if (!response.isSuccessful()) {
+                        throw new Exception(response.message());
                     }
-                    Account accountInfo = respAcct.body();
+                    Account accountInfo = response.body();
                     if(showLogs) {
-                        Log.d(this.getClass().getName(), respAcct.toString());
+                        Log.d(this.getClass().getName(), response.toString());
                     }
                     return accountInfo;
                 }

@@ -35,10 +35,7 @@ public class AccountFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
         AccountViewModel accountViewModel = new ViewModelProvider(this).get(AccountViewModel.class);
 
-        Context context = getActivity();
-        ExecutorService mExecutor = Executors.newSingleThreadExecutor();
-
-        applicationService = new ApplicationService(context);
+        applicationService = new ApplicationService(getActivity());
         account = new AccountModel();
 
         binding = FragmentAccountBinding.inflate(inflater, container, false);
@@ -82,7 +79,7 @@ public class AccountFragment extends Fragment {
                                     .exceptionally(e->{
                                         account.setAccountInfo(null);
                                         binding.swipe.setRefreshing(false);
-                                        Snackbar.make(rootView, String.format("Error refreshing balance: %s", e.getMessage()), Snackbar.LENGTH_SHORT).show();
+                                        Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_SHORT).show();
                                         return null;
                                     })
                                     .handle( (ok, ex) -> {
@@ -93,7 +90,7 @@ public class AccountFragment extends Fragment {
                         catch (Exception e) {
                             binding.swipe.setRefreshing(false);
                             Log.e("Request Error", e.getMessage());
-                            Snackbar.make(rootView, String.format("Error refreshing balance: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+                            Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
                         }
                     }
                 });
