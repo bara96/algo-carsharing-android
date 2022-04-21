@@ -45,7 +45,7 @@
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <TextView
-                    android:id="@+id/balance_tv"
+                    android:id="@+id/balance"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="8dp"
@@ -57,27 +57,65 @@
                     app:layout_constraintTop_toTopOf="parent" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <TextView
-                android:id="@+id/address_tv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="24dp"
-                android:text="@string/account_address"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/balance_layout" />
-
-            <EditText
-                android:id="@+id/address_et"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/address_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="20dp"
-                android:ems="10"
-                android:inputType="textPersonName"
-                android:minHeight="48dp"
+                android:layout_margin="24dp"
+                android:visibility="gone"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/address_tv" />
+                app:layout_constraintTop_toBottomOf="@id/balance_layout">
+
+                <TextView
+                    android:id="@+id/address_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/account_address"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <EditText
+                    android:id="@+id/address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="none"
+                    android:enabled="false"
+                    android:minHeight="48dp"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/address_tv" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/mnemonic_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="24dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/address_layout">
+
+            <TextView
+                android:id="@+id/mnemonic_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/account_mnemonic"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+                <EditText
+                    android:id="@+id/mnemonic"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="text"
+                    android:minHeight="48dp"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/mnemonic_tv" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <Button
                 android:id="@+id/save_bt"
@@ -89,7 +127,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/address_et" />
+                app:layout_constraintTop_toBottomOf="@id/mnemonic_layout" />
 
             <ProgressBar
                 android:id="@+id/progressBar"
@@ -97,10 +135,10 @@
                 android:layout_height="wrap_content"
                 android:elevation="20dp"
                 android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="@id/address_et"
-                app:layout_constraintLeft_toLeftOf="@id/address_et"
-                app:layout_constraintRight_toRightOf="@id/address_et"
-                app:layout_constraintTop_toTopOf="@id/address_et" />
+                app:layout_constraintBottom_toBottomOf="@id/mnemonic_layout"
+                app:layout_constraintLeft_toLeftOf="@id/mnemonic_layout"
+                app:layout_constraintRight_toRightOf="@id/mnemonic_layout"
+                app:layout_constraintTop_toTopOf="@id/mnemonic_layout" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

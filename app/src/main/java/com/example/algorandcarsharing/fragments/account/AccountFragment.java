@@ -2,6 +2,8 @@ package com.example.algorandcarsharing.fragments.account;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,11 +13,13 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.algorand.algosdk.v2.client.model.Account;
 import com.example.algorandcarsharing.databinding.FragmentAccountBinding;
 import com.example.algorandcarsharing.services.ApplicationService;
 import com.example.algorandcarsharing.models.AccountModel;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.security.GeneralSecurityException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,10 +45,29 @@ public class AccountFragment extends Fragment {
         binding = FragmentAccountBinding.inflate(inflater, container, false);
         rootView = binding.getRoot();
 
+        binding.address.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if(account.getAddress() != null) {
+                    binding.addressLayout.setVisibility(View.VISIBLE);
+                }
+                else {
+                    binding.addressLayout.setVisibility(View.GONE);
+                }
+            }
+        });
         binding.saveBt.setOnClickListener(v -> {
-            account.setAddress(String.valueOf(binding.addressEt.getText()));
+            account.setMnemonic(String.valueOf(binding.mnemonic.getText()));
             saveAccountData();
-            Snackbar.make(rootView, "Address saved", Snackbar.LENGTH_SHORT).show();
+            Snackbar.make(rootView, "Account Saved", Snackbar.LENGTH_LONG).show();
         });
 
         binding.swipe.setOnRefreshListener(
@@ -64,7 +87,7 @@ public class AccountFragment extends Fragment {
                                         return null;
                                     })
                                     .handle( (ok, ex) -> {
-                                        requireActivity().runOnUiThread(() -> binding.balanceTv.setText(String.valueOf(account.getBalance())));
+                                        requireActivity().runOnUiThread(() -> binding.balance.setText(String.valueOf(account.getBalance())));
                                         return ok;
                                     });
                         }
@@ -100,9 +123,6 @@ public class AccountFragment extends Fragment {
         super.onResume();
 
         loadAccountData();
-        if(account.getAddress() == null) {
-            Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
-        }
     }
 
     @Override
@@ -116,8 +136,19 @@ public class AccountFragment extends Fragment {
     }
 
     private void loadAccountData() {
-        account.loadFromStorage(getActivity());
-        binding.addressEt.setText(account.getAddress());
-        binding.balanceTv.setText(String.valueOf(account.getBalance()));
+        try {
+            account.loadFromStorage(getActivity());
+            binding.mnemonic.setText(account.getMnemonic());
+            binding.address.setText(account.getAddress());
+            binding.balance.setText(String.valueOf(account.getBalance()));
+
+        }
+        catch (GeneralSecurityException e) {
+            Snackbar.make(rootView, String.format("Error loading account: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+            e.printStackTrace();
+        }
+        if(account.getMnemonic() == null) {
+            Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
+        }
     }
 }

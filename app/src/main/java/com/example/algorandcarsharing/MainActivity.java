@@ -104,8 +104,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void checkAccount() {
         SharedPreferences sharedPref = this.getSharedPreferences(getString(R.string.preferences_account), Context.MODE_PRIVATE);
-        final String address = sharedPref.getString(getString(R.string.preference_key_address), null);
-        if(address == null) {
+        final String mnemonic = sharedPref.getString(getString(R.string.preference_key_mnemonic), null);
+        if(mnemonic == null) {
             navController.navigate(R.id.nav_account);
         }
     }
