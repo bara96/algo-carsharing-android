@@ -51,19 +51,6 @@ public class MainActivity extends AppCompatActivity {
         binding.appBarMain.fab.setOnClickListener(view -> {
             Intent intent = new Intent(this, TripCreate.class);
             startActivity(intent);
-            /*
-            mExecutor.execute(() -> {
-                JSONObject response = null;
-                try {
-                    response = indexerService.searchTransactions();
-                    Log.d("Indexer Response", response.toString(2));
-                    Snackbar.make(view, "Indexer searchTransactions", Snackbar.LENGTH_LONG).show();
-                }
-                catch (Exception e){
-                    Log.e("Indexer Error", e.getMessage());
-                }
-            });
-             */
         });
 
         DrawerLayout drawer = binding.drawerLayout;

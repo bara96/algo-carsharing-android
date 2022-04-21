@@ -6,7 +6,10 @@ import android.util.Log;
 import com.algorand.algosdk.crypto.Address;
 import com.algorand.algosdk.v2.client.common.IndexerClient;
 import com.algorand.algosdk.v2.client.common.Response;
+import com.algorand.algosdk.v2.client.indexer.SearchForApplications;
 import com.algorand.algosdk.v2.client.model.Account;
+import com.algorand.algosdk.v2.client.model.Application;
+import com.algorand.algosdk.v2.client.model.ApplicationResponse;
 import com.algorand.algosdk.v2.client.model.Enums;
 import com.algorand.algosdk.v2.client.model.TransactionsResponse;
 import com.example.algorandcarsharing.R;
@@ -76,6 +79,35 @@ public class IndexerService {
                         Log.d(this.getClass().getName(), response.toString());
                     }
                     return transactions;
+                }
+                catch (Exception e) {
+                    Log.e(this.getClass().getName(), e.getMessage());
+                    throw new CompletionException(e);
+                }
+            }
+        };
+    }
+
+    public Supplier<ApplicationResponse> getApplication(Long appid) {
+        return new Supplier<ApplicationResponse>() {
+            @Override
+            public ApplicationResponse get() {
+                try {
+                    Response<ApplicationResponse> response = client.lookupApplicationByID(appid)
+                            .execute();
+
+                    if (!response.isSuccessful()) {
+                        String message = "Response code: "
+                                .concat(String.valueOf(response.code()))
+                                .concat(", with message: ")
+                                .concat(response.message());
+                        throw new Exception(message);
+                    }
+                    ApplicationResponse application = response.body();
+                    if(showLogs) {
+                        Log.d(this.getClass().getName(), response.toString());
+                    }
+                    return application;
                 }
                 catch (Exception e) {
                     Log.e(this.getClass().getName(), e.getMessage());

@@ -14,6 +14,8 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.algorand.algosdk.v2.client.model.Application;
+import com.algorand.algosdk.v2.client.model.ApplicationResponse;
 import com.algorand.algosdk.v2.client.model.Transaction;
 import com.algorand.algosdk.v2.client.model.TransactionsResponse;
 import com.example.algorandcarsharing.adapters.TripAdapter;
@@ -25,6 +27,9 @@ import com.google.android.material.snackbar.Snackbar;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.function.Function;
 
 public class HomeFragment extends Fragment {
 
@@ -34,7 +39,7 @@ public class HomeFragment extends Fragment {
     private View rootView;
 
     protected TripAdapter tripAdapter;
-    List<Transaction> transactions;
+    List<Application> applications;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -46,9 +51,9 @@ public class HomeFragment extends Fragment {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         rootView = binding.getRoot();
 
-        transactions = new ArrayList<>();
+        applications = new ArrayList<>();
         RecyclerView tripList = binding.tripList;
-        tripAdapter = new TripAdapter(transactions);
+        tripAdapter = new TripAdapter(applications);
         tripList.setAdapter(tripAdapter);
         tripList.setLayoutManager(new LinearLayoutManager(getActivity()));
 
@@ -57,14 +62,17 @@ public class HomeFragment extends Fragment {
                         try {
                             CompletableFuture.supplyAsync(indexerService.getTransactions())
                                     .thenAcceptAsync(result -> {
+                                        List<Application> apps = searchApplications(result.transactions);
+                                        System.out.println(apps);
+
                                         // remove old elements
                                         int size = tripAdapter.getItemCount();
-                                        transactions.clear();
+                                        applications.clear();
                                         requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeRemoved(0, size));
 
                                         // add new elements
-                                        transactions.addAll(result.transactions);
-                                        requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeInserted(0, transactions.size()));
+                                        applications.addAll(apps);
+                                        requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeInserted(0, applications.size()));
 
                                         binding.swipe.setRefreshing(false);
                                         Snackbar.make(rootView, "Refreshed", Snackbar.LENGTH_LONG).show();
@@ -72,7 +80,7 @@ public class HomeFragment extends Fragment {
                                     .exceptionally(e->{
                                         // remove old elements
                                         int size = tripAdapter.getItemCount();
-                                        transactions.clear();
+                                        applications.clear();
                                         requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeRemoved(0, size));
 
                                         binding.swipe.setRefreshing(false);
@@ -95,4 +103,29 @@ public class HomeFragment extends Fragment {
         super.onDestroyView();
         binding = null;
     }
+
+    private List<Application> searchApplications(List<Transaction> transactions) {
+        List<CompletableFuture> futureList=new ArrayList<>();
+        List<Application> validApplications = new ArrayList<>();
+        for(int i=0; i<transactions.size(); i++) {
+            Transaction transaction = transactions.get(i);
+            try {
+                futureList.add(CompletableFuture.supplyAsync(indexerService.getApplication(transaction.createdApplicationIndex))
+                        .thenAcceptAsync(result -> {
+                            if(!result.application.deleted) {
+                                validApplications.add(result.application);
+                            }
+                        }).exceptionally(e->{
+                            Log.e("Request Error", e.getMessage());
+                        return null;
+                    }));
+            }
+            catch (Exception e) {
+                Log.e("Request Error", e.getMessage());
+            }
+        }
+        futureList.forEach(CompletableFuture::join);
+        return validApplications;
+    }
+
 }
