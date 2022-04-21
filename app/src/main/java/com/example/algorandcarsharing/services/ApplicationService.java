@@ -53,10 +53,10 @@ public class ApplicationService {
         return client;
     }
 
-    public Supplier<Long> getBalance(String address) {
-        return new Supplier<Long>() {
+    public Supplier<Account> getAccountInfo(String address) {
+        return new Supplier<Account>() {
             @Override
-            public Long get() {
+            public Account get() {
                 try {
                     Address pk = new Address(address);
 
@@ -68,7 +68,7 @@ public class ApplicationService {
                     if(showLogs) {
                         Log.d(this.getClass().getName(), respAcct.toString());
                     }
-                    return accountInfo.amount;
+                    return accountInfo;
                 }
                 catch (Exception e) {
                     Log.e(this.getClass().getName(), e.getMessage());

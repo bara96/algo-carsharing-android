@@ -13,7 +13,6 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.algorand.algosdk.v2.client.model.Account;
 import com.example.algorandcarsharing.databinding.FragmentAccountBinding;
 import com.example.algorandcarsharing.services.ApplicationService;
 import com.example.algorandcarsharing.models.AccountModel;
@@ -74,14 +73,14 @@ public class AccountFragment extends Fragment {
                 () -> {
                     if(account.getAddress() != null) {
                         try {
-                            CompletableFuture.supplyAsync(applicationService.getBalance(account.getAddress()))
+                            CompletableFuture.supplyAsync(applicationService.getAccountInfo(account.getAddress()))
                                     .thenAcceptAsync(result -> {
-                                        account.setBalance(result);
+                                        account.setAccountInfo(result);
                                         binding.swipe.setRefreshing(false);
                                         Snackbar.make(rootView, "Account Refreshed", Snackbar.LENGTH_LONG).show();
                                     })
                                     .exceptionally(e->{
-                                        account.setBalance(0L);
+                                        account.setAccountInfo(null);
                                         binding.swipe.setRefreshing(false);
                                         Snackbar.make(rootView, String.format("Error refreshing balance: %s", e.getMessage()), Snackbar.LENGTH_SHORT).show();
                                         return null;

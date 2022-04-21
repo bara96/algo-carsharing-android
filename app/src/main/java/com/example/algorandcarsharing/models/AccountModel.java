@@ -12,17 +12,20 @@ public class AccountModel {
 
     protected Account account;
     protected String mnemonic;
-    protected long balance;
+    protected Long balance;
+    protected com.algorand.algosdk.v2.client.model.Account accountInfo;
 
     public AccountModel() {
         this.mnemonic = null;
         this.balance = 0L;
+        this.accountInfo = null;
         this.account = null;
     }
 
     public AccountModel(String mnemonic) throws GeneralSecurityException {
         this.mnemonic = mnemonic;
         this.balance = 0L;
+        this.accountInfo = null;
         this.account = null;
         loadAccount();
     }
@@ -49,6 +52,20 @@ public class AccountModel {
 
     public void loadAccount() throws GeneralSecurityException {
         this.account = new Account(this.mnemonic);
+    }
+
+    public com.algorand.algosdk.v2.client.model.Account getAccountInfo() {
+        return accountInfo;
+    }
+
+    public void setAccountInfo(com.algorand.algosdk.v2.client.model.Account accountInfo) {
+        this.accountInfo = accountInfo;
+        if(accountInfo != null) {
+            this.setBalance(accountInfo.amount);
+        }
+        else {
+            this.setBalance(0L);
+        }
     }
 
     public String getAddress() {
