@@ -1,4 +1,4 @@
-package com.example.algorandcarsharing.clients;
+package com.example.algorandcarsharing.services;
 
 import android.content.Context;
 

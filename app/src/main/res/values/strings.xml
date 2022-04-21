@@ -23,6 +23,23 @@
     <string name="preference_key_balance">preference_key_balance</string>
 
     <!-- env -->
-    <string name="env_transaction_note">67c8df8c4a6ef03decdfd0f174d16641</string>
+    <string name="env_transaction_note" translatable="false">67c8df8c4a6ef03decdfd0f174d16641</string>
+    <string name="env_approval_program" translatable="false">BSADAQACJgwPYXZhaWxhYmxlX3NlYXRzCnRyaXBfc3RhdGUOZGVwYXJ0dXJlX2RhdGUHY3JlYXRvchBtYXhfcGFydGljaXBhbnRzDmVzY3Jvd19hZGRyZXNzCXRyaXBfY29zdBBpc19wYXJ0aWNpcGF0aW5nDGFycml2YWxfZGF0ZQxjcmVhdG9yX25hbWURZGVwYXJ0dXJlX2FkZHJlc3MPYXJyaXZhbF9hZGRyZXNzMRgjEkACKzEZIhJAAgsxGSMSQAA2MRmBBBJAABsxGYEFEkAAAQAxACtkEihkJwRkEilkJBIREEMxACtkEihkJwRkEhApZCQSFBBDNhoAgBBpbml0aWFsaXplRXNjcm93EkABkjYaAIAKdXBkYXRlVHJpcBJAASQ2GgCAD3BhcnRpY2lwYXRlVHJpcBJAALI2GgCAE2NhbmNlbFBhcnRpY2lwYXRpb24SQABANhoAgAlzdGFydFRyaXASQAABAClkIhIxACtkEhAyBipkDxBEMwEQIhIzAQcrZBIQMwEAJwVkEhBEKSRnIkMiQylkIhIxACtkEhQQMgYqZA4QMgQkEhBEMwEQIhIzAQczAAASEDMBCCcGZBIQMwEAJwVkEhBEIzIIJwdjNQQ1BTQENAUiEhBEKChkIghnIycHI2YiQyJDKWQiEjEAK2QSFBAoZCMNEDIGKmQOEDIEJBIQRDMBECISMwEHJwVkEhAzAQgnBmQSEDMBADMAABIQRCMyCCcHYzUCNQM0AhQ0AyMSEUQoKGQiCWcjJwciZiJDMRuBCBJEKGQnBGQSKWQkEhQQRCcJNhoBZycKNhoCZycLNhoDZyo2GgQXZycINhoFF2cnBjYaBhdnJwQ2GgcXZyg2GgcXZzIGKmQORCpkJwhkDEQnBGQjDUQiQyMnBWU1ADUBNAAjEkQyBCISRDEAK2QSRCcFNhoBZykiZyJDMQArZBIURClkIhJEMgYqZA5EKGQjDUQiQzEbgQcSRCsxAGcnCTYaAGcnCjYaAWcnCzYaAmcqNhoDF2cnCDYaBBdnJwY2GgUXZycENhoGF2coNhoGF2cpI2cyBipkDkQqZCcIZAxEJwRkIw1EIkM=</string>
+    <string name="env_clear_state_program" translatable="false">BYEBQw==</string>
+    <string name="title_activity_settings">SettingsActivity</string>
 
+    <!-- Preference Titles -->
+    <string name="messages_header">Messages</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Messages Preferences -->
+    <string name="signature_title">Your signature</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync email periodically</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails
+    </string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
 </resources>

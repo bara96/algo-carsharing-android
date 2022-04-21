@@ -1,9 +1,11 @@
 package com.example.algorandcarsharing;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.ActionBar;
 import android.os.Bundle;
+import android.util.Log;
 
 import java.util.Objects;
 
@@ -16,8 +18,14 @@ public class TripCreate extends AppCompatActivity {
     }
 
     @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return super.onSupportNavigateUp();
+    }
+
+    @Override
     public void onBackPressed() {
         super.onBackPressed();
-        overridePendingTransition(R.anim.trans_right_in, R.anim.trans_right_out);
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
 }

@@ -1,4 +1,4 @@
-package com.example.algorandcarsharing.clients;
+package com.example.algorandcarsharing.services;
 
 import android.content.Context;
 import android.util.Log;
@@ -9,6 +9,9 @@ import com.algorand.algosdk.v2.client.common.Response;
 import com.algorand.algosdk.v2.client.model.Account;
 import com.example.algorandcarsharing.R;
 
+import java.util.concurrent.CompletionException;
+import java.util.function.Supplier;
+
 
 public class ApplicationService {
 
@@ -18,6 +21,8 @@ public class ApplicationService {
     protected String clientToken = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     protected int clientPort = 4001;
     protected String transactionNote;
+
+    protected boolean showLogs = true;
 
     public ApplicationService(Context context, String clientAddress, int clientPort, String clientToken) {
         this.context = context;
@@ -48,15 +53,28 @@ public class ApplicationService {
         return client;
     }
 
-    public Long getBalance(String address) throws Exception {
-        Address pk = new Address(address);
+    public Supplier<Long> getBalance(String address) {
+        return new Supplier<Long>() {
+            @Override
+            public Long get() {
+                try {
+                    Address pk = new Address(address);
 
-        Response<Account> respAcct = client.AccountInformation(pk).execute();
-        if (!respAcct.isSuccessful()) {
-            throw new Exception(respAcct.message());
-        }
-        Account accountInfo = respAcct.body();
-        Log.d(this.getClass().toString(), respAcct.toString());
-        return accountInfo.amount;
+                    Response<Account> respAcct = client.AccountInformation(pk).execute();
+                    if (!respAcct.isSuccessful()) {
+                        throw new Exception(respAcct.message());
+                    }
+                    Account accountInfo = respAcct.body();
+                    if(showLogs) {
+                        Log.d(this.getClass().getName(), respAcct.toString());
+                    }
+                    return accountInfo.amount;
+                }
+                catch (Exception e) {
+                    Log.e(this.getClass().getName(), e.getMessage());
+                    throw new CompletionException(e);
+                }
+            }
+        };
     }
 }
