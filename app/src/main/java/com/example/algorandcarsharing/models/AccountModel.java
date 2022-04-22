@@ -6,8 +6,6 @@ import android.content.SharedPreferences;
 import com.example.algorandcarsharing.R;
 import com.algorand.algosdk.account.Account;
 
-import java.security.GeneralSecurityException;
-
 public class AccountModel {
 
     protected Account account;
