@@ -3,30 +3,43 @@ package com.example.algorandcarsharing.services;
 import android.content.Context;
 import android.util.Log;
 
-import com.algorand.algosdk.crypto.Address;
+import com.algorand.algosdk.crypto.TEALProgram;
+import com.algorand.algosdk.logic.StateSchema;
+import com.algorand.algosdk.account.Account;
+import com.algorand.algosdk.transaction.Transaction;
 import com.algorand.algosdk.v2.client.common.AlgodClient;
 import com.algorand.algosdk.v2.client.common.Response;
-import com.algorand.algosdk.v2.client.model.Account;
-import com.example.algorandcarsharing.R;
+import com.algorand.algosdk.v2.client.model.CompileResponse;
+import com.example.algorandcarsharing.constants.ApplicationConstants;
+import com.example.algorandcarsharing.constants.ClientConstants;
+import com.example.algorandcarsharing.helpers.TransactionsHelper;
+import com.example.algorandcarsharing.helpers.UtilitiesHelper;
+import com.example.algorandcarsharing.models.BaseTripModel;
+import com.example.algorandcarsharing.models.CreateTripModel;
 
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.function.Supplier;
 
 
-public class ApplicationService {
+public class ApplicationService implements BaseService {
 
-    protected Context context;
     protected AlgodClient client;
-    protected String clientAddress = "10.0.2.2";
-    protected String clientToken = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-    protected int clientPort = 4001;
+    protected String clientAddress = ClientConstants.algodClientAddress;
+    protected String clientToken = ClientConstants.algodCClientToken;
+    protected int clientPort = ClientConstants.algodCClientPort;
     protected String transactionNote;
 
     protected boolean showLogs = true;
 
-    public ApplicationService(Context context, String clientAddress, int clientPort, String clientToken) {
-        this.context = context;
-        this.transactionNote = context.getString(R.string.preferences_account);
+    public enum ProgramType  {
+        ApprovalState,
+        ClearState,
+    }
+
+    public ApplicationService(String clientAddress, int clientPort, String clientToken) {
+        this.transactionNote = ApplicationConstants.transactionNote;
 
         this.clientAddress = clientAddress;
         this.clientPort = clientPort;
@@ -34,9 +47,8 @@ public class ApplicationService {
         this.client = this.connectToClient();
     }
 
-    public ApplicationService(Context context) {
-        this.context = context;
-        this.transactionNote = context.getString(R.string.preferences_account);
+    public ApplicationService() {
+        this.transactionNote = ApplicationConstants.transactionNote;;
 
         this.client = this.connectToClient();
     }
@@ -45,7 +57,7 @@ public class ApplicationService {
      * Connect to indexer Client
      * @return Client
      */
-    private AlgodClient connectToClient() {
+    public AlgodClient connectToClient() {
         return new AlgodClient(this.clientAddress, this.clientPort, this.clientToken);
     }
 
@@ -53,22 +65,39 @@ public class ApplicationService {
         return client;
     }
 
-    public Supplier<Account> getAccountInfo(String address) {
-        return new Supplier<Account>() {
-            @Override
-            public Account get() {
-                try {
-                    Address pk = new Address(address);
+    protected TEALProgram getCompiledProgram(Context context, ProgramType programType) {
+        String programFile = "";
+        switch (programType) {
+            case ApprovalState: programFile = "contracts/carsharing_approval.teal"; break;
+            case ClearState: programFile = "contracts/carsharing_clear_state.teal"; break;
+        }
+        try {
+            String program = UtilitiesHelper.readAssetFile(context, programFile);
+            Response<CompileResponse> response = client.TealCompile().source(program.getBytes(StandardCharsets.UTF_8)).execute();
+            CompileResponse programCompiled = response.body();
+            return new TEALProgram(programCompiled.result);
+        }
+        catch (Exception e) {
+            Log.e(this.getClass().getName(), e.getMessage());
+            throw new CompletionException(e);
+        }
+    }
 
-                    Response<Account> response = client.AccountInformation(pk).execute();
-                    if (!response.isSuccessful()) {
-                        throw new Exception(response.message());
-                    }
-                    Account accountInfo = response.body();
-                    if(showLogs) {
-                        Log.d(this.getClass().getName(), response.toString());
-                    }
-                    return accountInfo;
+    public Supplier<Transaction> createApplication(Context context, Account sender, CreateTripModel tripArgs) {
+        return new Supplier<Transaction>() {
+            @Override
+            public Transaction get() {
+                try {
+                    TEALProgram approvalProgram = getCompiledProgram(context, ProgramType.ApprovalState);
+                    TEALProgram clearStateProgram = getCompiledProgram(context, ProgramType.ClearState);
+
+                    StateSchema globalState = BaseTripModel.getGlobalStateSchema();
+                    StateSchema localState = BaseTripModel.getLocalStateSchema();
+
+                    List<byte[]> args = tripArgs.getArgs(client);
+
+                    Transaction txn = TransactionsHelper.create_txn(client, sender, approvalProgram, clearStateProgram, globalState, localState, args);
+                    return txn;
                 }
                 catch (Exception e) {
                     Log.e(this.getClass().getName(), e.getMessage());
@@ -77,4 +106,5 @@ public class ApplicationService {
             }
         };
     }
+
 }

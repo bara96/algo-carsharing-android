@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
         Security.insertProviderAt(new BouncyCastleProvider(), 0);
 
         ExecutorService mExecutor = Executors.newSingleThreadExecutor();
-        indexerService = new IndexerService(this);
+        indexerService = new IndexerService();
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());

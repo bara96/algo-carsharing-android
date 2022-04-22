@@ -1,46 +1,37 @@
 package com.example.algorandcarsharing.services;
 
-import android.content.Context;
 import android.util.Log;
 
-import com.algorand.algosdk.crypto.Address;
 import com.algorand.algosdk.v2.client.common.IndexerClient;
 import com.algorand.algosdk.v2.client.common.Response;
-import com.algorand.algosdk.v2.client.indexer.SearchForApplications;
-import com.algorand.algosdk.v2.client.model.Account;
-import com.algorand.algosdk.v2.client.model.Application;
 import com.algorand.algosdk.v2.client.model.ApplicationResponse;
 import com.algorand.algosdk.v2.client.model.Enums;
 import com.algorand.algosdk.v2.client.model.TransactionsResponse;
-import com.example.algorandcarsharing.R;
-
-import org.json.JSONObject;
+import com.example.algorandcarsharing.constants.ApplicationConstants;
+import com.example.algorandcarsharing.constants.ClientConstants;
 
 import java.util.concurrent.CompletionException;
 import java.util.function.Supplier;
 
 
-public class IndexerService {
+public class IndexerService implements BaseService {
 
-    protected Context context;
     protected IndexerClient client;
-    protected String clientAddress = "10.0.2.2";
-    protected int clientPort = 8980;
+    protected String clientAddress = ClientConstants.indexerClientAddress;
+    protected int clientPort = ClientConstants.indexerClientPort;
     protected String transactionNote;
 
     protected boolean showLogs = true;
 
-    public IndexerService(Context context, String clientAddress, int clientPort) {
+    public IndexerService(String clientAddress, int clientPort) {
         this.clientAddress = clientAddress;
         this.clientPort = clientPort;
         this.client = this.connectToClient();
-        this.context = context;
-        this.transactionNote = context.getString(R.string.env_transaction_note);
+        this.transactionNote = ApplicationConstants.transactionNote;
     }
 
-    public IndexerService(Context context) {
-        this.context = context;
-        this.transactionNote = context.getString(R.string.env_transaction_note);
+    public IndexerService() {
+        this.transactionNote = ApplicationConstants.transactionNote;
         this.client = this.connectToClient();
     }
 
@@ -48,7 +39,7 @@ public class IndexerService {
      * Connect to indexer Client
      * @return Client
      */
-    private IndexerClient connectToClient() {
+    public IndexerClient connectToClient() {
         return new IndexerClient(this.clientAddress, this.clientPort);
     }
 

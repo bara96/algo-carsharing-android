@@ -46,7 +46,7 @@ public class HomeFragment extends Fragment {
         HomeViewModel homeViewModel =
                 new ViewModelProvider(this).get(HomeViewModel.class);
 
-        indexerService = new IndexerService(getActivity());
+        indexerService = new IndexerService();
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         rootView = binding.getRoot();

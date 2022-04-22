@@ -1,6 +1,5 @@
 package com.example.algorandcarsharing.fragments.account;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -14,28 +13,26 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.algorandcarsharing.databinding.FragmentAccountBinding;
+import com.example.algorandcarsharing.services.AccountService;
 import com.example.algorandcarsharing.services.ApplicationService;
 import com.example.algorandcarsharing.models.AccountModel;
 import com.google.android.material.snackbar.Snackbar;
 
-import java.security.GeneralSecurityException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class AccountFragment extends Fragment {
 
     private FragmentAccountBinding binding;
     private AccountModel account;
 
-    private ApplicationService applicationService;
+    private AccountService accountService;
     private View rootView;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         AccountViewModel accountViewModel = new ViewModelProvider(this).get(AccountViewModel.class);
 
-        applicationService = new ApplicationService(getActivity());
+        accountService = new AccountService();
         account = new AccountModel();
 
         binding = FragmentAccountBinding.inflate(inflater, container, false);
@@ -78,7 +75,7 @@ public class AccountFragment extends Fragment {
                 () -> {
                     if(account.getAddress() != null) {
                         try {
-                            CompletableFuture.supplyAsync(applicationService.getAccountInfo(account.getAddress()))
+                            CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
                                     .thenAcceptAsync(result -> {
                                         account.setAccountInfo(result);
                                         binding.swipe.setRefreshing(false);
