@@ -17,8 +17,10 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.example.algorandcarsharing.databinding.ActivityMainBinding;
+import com.example.algorandcarsharing.models.AccountModel;
 import com.example.algorandcarsharing.services.IndexerService;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -90,9 +92,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkAccount() {
-        SharedPreferences sharedPref = this.getSharedPreferences(getString(R.string.preferences_account), Context.MODE_PRIVATE);
-        final String mnemonic = sharedPref.getString(getString(R.string.preference_key_mnemonic), null);
-        if(mnemonic == null) {
+        AccountModel account = new AccountModel();
+        try {
+            account.loadFromStorage(this);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        if(account.getAddress() == null) {
             navController.navigate(R.id.nav_account);
         }
     }

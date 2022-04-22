@@ -22,20 +22,28 @@ public class AccountModel {
         this.account = null;
     }
 
-    public AccountModel(String mnemonic) throws GeneralSecurityException {
-        this.mnemonic = mnemonic;
+    public AccountModel(String mnemonic) throws Exception {
         this.balance = 0L;
         this.accountInfo = null;
         this.account = null;
-        loadAccount();
+        this.setMnemonic(mnemonic);
     }
 
     public String getMnemonic() {
         return mnemonic;
     }
 
-    public void setMnemonic(String mnemonic) {
+    public void setMnemonic(String mnemonic) throws Exception {
         this.mnemonic = mnemonic;
+        try {
+            this.account = new Account(this.mnemonic);
+        }
+        catch (Exception e) {
+            this.balance = 0L;
+            this.accountInfo = null;
+            this.account = null;
+            throw new Exception("Invalid mnemonic");
+        }
     }
 
     public Long getBalance() {
@@ -48,10 +56,6 @@ public class AccountModel {
 
     public Account getAccount() {
         return account;
-    }
-
-    public void loadAccount() throws GeneralSecurityException {
-        this.account = new Account(this.mnemonic);
     }
 
     public com.algorand.algosdk.v2.client.model.Account getAccountInfo() {
@@ -75,13 +79,13 @@ public class AccountModel {
         return null;
     }
 
-    public void loadFromStorage(Context context) throws GeneralSecurityException {
+    public void loadFromStorage(Context context) throws Exception {
         if (context != null) {
             SharedPreferences sharedPref = context.getSharedPreferences(context.getString(R.string.preferences_account), Context.MODE_PRIVATE);
-            this.mnemonic = sharedPref.getString(context.getString(R.string.preference_key_mnemonic), null);
-            this.balance = sharedPref.getLong(context.getString(R.string.preference_key_balance), 0);
-            if(this.mnemonic != null) {
-                loadAccount();
+            String mnemonic = sharedPref.getString(context.getString(R.string.preference_key_mnemonic), null);
+            if(mnemonic != null) {
+                this.setMnemonic(mnemonic);
+                this.balance = sharedPref.getLong(context.getString(R.string.preference_key_balance), 0);
             }
         }
     }

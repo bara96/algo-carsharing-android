@@ -61,9 +61,17 @@ public class AccountFragment extends Fragment {
             }
         });
         binding.saveBt.setOnClickListener(v -> {
-            account.setMnemonic(String.valueOf(binding.mnemonic.getText()));
+            try {
+                String mnemonic = String.valueOf(binding.mnemonic.getText());
+                account.setMnemonic(mnemonic);
+                binding.address.setText(account.getAddress());
+                Snackbar.make(rootView, "Account Saved", Snackbar.LENGTH_LONG).show();
+            }
+            catch (Exception e) {
+                Log.e("Error saving account", e.getMessage());
+                Snackbar.make(rootView, String.format("Error while saving the account: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+            }
             saveAccountData();
-            Snackbar.make(rootView, "Account Saved", Snackbar.LENGTH_LONG).show();
         });
 
         binding.swipe.setOnRefreshListener(
@@ -79,7 +87,7 @@ public class AccountFragment extends Fragment {
                                     .exceptionally(e->{
                                         account.setAccountInfo(null);
                                         binding.swipe.setRefreshing(false);
-                                        Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_SHORT).show();
+                                        Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
                                         return null;
                                     })
                                     .handle( (ok, ex) -> {
@@ -89,9 +97,13 @@ public class AccountFragment extends Fragment {
                         }
                         catch (Exception e) {
                             binding.swipe.setRefreshing(false);
-                            Log.e("Request Error", e.getMessage());
+                            Log.e("Error getAccountInfo()", e.getMessage());
                             Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
                         }
+                    }
+                    else {
+                        binding.swipe.setRefreshing(false);
+                        Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
                     }
                 });
 
@@ -134,15 +146,14 @@ public class AccountFragment extends Fragment {
     private void loadAccountData() {
         try {
             account.loadFromStorage(getActivity());
-            binding.mnemonic.setText(account.getMnemonic());
-            binding.address.setText(account.getAddress());
-            binding.balance.setText(String.valueOf(account.getBalance()));
-
         }
-        catch (GeneralSecurityException e) {
+        catch (Exception e) {
             Snackbar.make(rootView, String.format("Error loading account: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
             e.printStackTrace();
         }
+        binding.mnemonic.setText(account.getMnemonic());
+        binding.address.setText(account.getAddress());
+        binding.balance.setText(String.valueOf(account.getBalance()));
         if(account.getMnemonic() == null) {
             Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
         }
