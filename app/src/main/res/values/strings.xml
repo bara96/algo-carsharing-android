@@ -42,4 +42,17 @@
 
     <string name="availables_trips">Availables Trips</string>
     <string name="trip_title">Trip Title</string>
+    <string name="menu_trips_create">Create Trip</string>
+    <string name="insert_trip_data">Insert Trip Data</string>
+    <string name="creator_name">Creator Name</string>
+    <string name="start_address">Start Address</string>
+    <string name="end_address">End Address</string>
+    <string name="end_date">End Date</string>
+    <string name="start_date">Start Date</string>
+    <string name="trip_cost">Trip Cost (unitary)</string>
+    <string name="available_seats">Available Seats</string>
+    <string name="create">Create</string>
+    <string name="create_dummy_trip">Create dummy trip</string>
+    <string name="end_time">End Time</string>
+    <string name="start_time">Start Time</string>
 </resources>

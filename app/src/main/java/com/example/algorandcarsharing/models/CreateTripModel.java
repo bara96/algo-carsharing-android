@@ -1,6 +1,7 @@
 package com.example.algorandcarsharing.models;
 
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -11,6 +12,8 @@ import com.example.algorandcarsharing.constants.Constants;
 import com.google.common.primitives.Bytes;
 
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -57,7 +60,7 @@ public class CreateTripModel implements BaseTripModel {
 
         return args;
     }
-    
+
     protected Future<Long> datetimeToRounds(AlgodClient client, Date date) {
         return new Future<Long>() {
 
@@ -83,7 +86,8 @@ public class CreateTripModel implements BaseTripModel {
                     GetStatus status = client.GetStatus();
 
                     Date today = new Date();
-                    long diffSeconds = (today.getTime()-date.getTime())/1000;
+
+                    long diffSeconds = (date.getTime()- today.getTime()) / 1000;
 
                     if(diffSeconds < 0L) {
                         return 0L;
@@ -104,5 +108,20 @@ public class CreateTripModel implements BaseTripModel {
                 return this.get();
             }
         };
+    }
+
+    public static CreateTripModel DummyTrip() throws ParseException {
+        String creatorName = "Matteo Baratella";
+        String startAddress = "Mestre";
+        String endAddress = "Milano";
+        String startDate = "2022/05/10 15:00";
+        String endDate = "2022/05/10 21:00";
+        int cost = Integer.parseInt("5000");
+        int availableSeats = Integer.parseInt("4");
+
+        Date dateStart = new SimpleDateFormat("yyyy/MM/dd").parse(startDate);
+        Date dateEnd = new SimpleDateFormat("yyyy/MM/dd").parse(endDate);
+
+        return new CreateTripModel(creatorName, startAddress, endAddress, dateStart, dateEnd, cost, availableSeats);
     }
 }

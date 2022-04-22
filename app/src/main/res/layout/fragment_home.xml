@@ -39,17 +39,6 @@
                 app:layout_constraintTop_toBottomOf="@id/trip_tv"
                 />
 
-            <ProgressBar
-                android:id="@+id/progressBar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:elevation="20dp"
-                android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="@id/trip_list"
-                app:layout_constraintLeft_toLeftOf="@id/trip_list"
-                app:layout_constraintRight_toRightOf="@id/trip_list"
-                app:layout_constraintTop_toTopOf="@id/trip_list" />
-
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

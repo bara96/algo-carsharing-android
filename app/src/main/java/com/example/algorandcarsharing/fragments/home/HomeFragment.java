@@ -74,7 +74,6 @@ public class HomeFragment extends Fragment {
                                         applications.addAll(apps);
                                         requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeInserted(0, applications.size()));
 
-                                        binding.swipe.setRefreshing(false);
                                         Snackbar.make(rootView, "Refreshed", Snackbar.LENGTH_LONG).show();
                                     })
                                     .exceptionally(e->{
@@ -83,9 +82,12 @@ public class HomeFragment extends Fragment {
                                         applications.clear();
                                         requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeRemoved(0, size));
 
-                                        binding.swipe.setRefreshing(false);
                                         Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_SHORT).show();
                                         return null;
+                                    })
+                                    .handle( (ok, ex) -> {
+                                        binding.swipe.setRefreshing(false);
+                                        return ok;
                                     });
                         }
                         catch (Exception e) {

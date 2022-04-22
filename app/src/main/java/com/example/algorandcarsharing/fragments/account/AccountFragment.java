@@ -78,17 +78,16 @@ public class AccountFragment extends Fragment {
                             CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
                                     .thenAcceptAsync(result -> {
                                         account.setAccountInfo(result);
-                                        binding.swipe.setRefreshing(false);
                                         Snackbar.make(rootView, "Account Refreshed", Snackbar.LENGTH_LONG).show();
                                     })
                                     .exceptionally(e->{
                                         account.setAccountInfo(null);
-                                        binding.swipe.setRefreshing(false);
                                         Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
                                         return null;
                                     })
                                     .handle( (ok, ex) -> {
                                         requireActivity().runOnUiThread(() -> binding.balance.setText(String.valueOf(account.getBalance())));
+                                        binding.swipe.setRefreshing(false);
                                         return ok;
                                     });
                         }

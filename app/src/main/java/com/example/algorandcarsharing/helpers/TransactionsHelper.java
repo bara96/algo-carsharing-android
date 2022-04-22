@@ -42,7 +42,6 @@ public class TransactionsHelper {
 
         return Transaction.ApplicationCreateTransactionBuilder()
                 .suggestedParams(params)
-                .flatFee(TransactionsHelper.fees)
                 .note(transactionNote.getBytes())
                 .sender(sender.getAddress())
                 .approvalProgram(approvalProgram)
