@@ -31,9 +31,9 @@ import java.util.concurrent.CompletableFuture;
 
 public class TripCreate extends AppCompatActivity {
 
-    final Calendar myCalendar= Calendar.getInstance();
     private ActivityTripCreateBinding binding;
     private AccountModel account;
+    private View rootView;
 
     private ApplicationService applicationService;
 
@@ -42,7 +42,8 @@ public class TripCreate extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         binding = ActivityTripCreateBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        rootView = binding.getRoot();
+        setContentView(rootView);
         binding.progressBar.setIndeterminate(true);
 
         applicationService = new ApplicationService();
@@ -60,7 +61,7 @@ public class TripCreate extends AppCompatActivity {
             }
             catch (Exception e) {
                 Log.e("Error saving trip", e.getMessage());
-                Snackbar.make(binding.getRoot(), String.format("Error while creating the trip: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+                Snackbar.make(rootView, String.format("Error while creating the trip: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
             }
 
         });
@@ -74,7 +75,7 @@ public class TripCreate extends AppCompatActivity {
             }
             catch (Exception e) {
                 Log.e("Error saving trip", e.getMessage());
-                Snackbar.make(binding.getRoot(), String.format("Error while creating the trip: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+                Snackbar.make(rootView, String.format("Error while creating the trip: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
             }
         });
     }
@@ -110,7 +111,7 @@ public class TripCreate extends AppCompatActivity {
             account.loadFromStorage(this);
         }
         catch (Exception e) {
-            Snackbar.make(binding.getRoot(), String.format("Error loading account: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+            Snackbar.make(rootView, String.format("Error loading account: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
             e.printStackTrace();
         }
     }
@@ -123,11 +124,11 @@ public class TripCreate extends AppCompatActivity {
                         .thenAcceptAsync(result -> {
                             Log.d("createApplication()", "success");
                             System.out.println(result);
-                            Snackbar.make(binding.getRoot(), "Trip Created", Snackbar.LENGTH_LONG).show();
+                            Snackbar.make(rootView, String.format("Trip created with id: %s", result), Snackbar.LENGTH_LONG).show();
                         })
                         .exceptionally(e->{
                             account.setAccountInfo(null);
-                            Snackbar.make(binding.getRoot(), String.format("Error during creation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+                            Snackbar.make(rootView, String.format("Error during creation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
                             return null;
                         })
                         .handle( (ok, ex) -> {
@@ -138,12 +139,12 @@ public class TripCreate extends AppCompatActivity {
             catch (Exception e) {
                 binding.progressBar.setVisibility(View.GONE);
                 Log.e("Error createApplication()", e.getMessage());
-                Snackbar.make(binding.getRoot(), String.format("Error during creation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+                Snackbar.make(rootView, String.format("Error during creation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
             }
         }
         else {
             binding.progressBar.setVisibility(View.GONE);
-            Snackbar.make(binding.getRoot(), "Please set an account address", Snackbar.LENGTH_LONG).show();
+            Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
         }
     }
 
@@ -163,42 +164,42 @@ public class TripCreate extends AppCompatActivity {
             Date endDatetime = new SimpleDateFormat("yyyy/MM/dd HH:mm").parse(endDate + " " + endTime);
 
             if (creatorName.length() < 0) {
-                Snackbar.make(binding.getRoot(), "Creator Name is required", Snackbar.LENGTH_LONG).show();
+                Snackbar.make(rootView, "Creator Name is required", Snackbar.LENGTH_LONG).show();
                 return null;
             }
 
             if (startAddress.length() < 0) {
-                Snackbar.make(binding.getRoot(), "Start Address is required", Snackbar.LENGTH_LONG).show();
+                Snackbar.make(rootView, "Start Address is required", Snackbar.LENGTH_LONG).show();
                 return null;
             }
 
             if (endAddress.length() < 0) {
-                Snackbar.make(binding.getRoot(), "End Address is required", Snackbar.LENGTH_LONG).show();
+                Snackbar.make(rootView, "End Address is required", Snackbar.LENGTH_LONG).show();
                 return null;
             }
 
             if (startDatetime == null) {
-                Snackbar.make(binding.getRoot(), "Start Date is invalid", Snackbar.LENGTH_LONG).show();
+                Snackbar.make(rootView, "Start Date is invalid", Snackbar.LENGTH_LONG).show();
                 return null;
             }
 
             if (endDatetime == null) {
-                Snackbar.make(binding.getRoot(), "End Date is required", Snackbar.LENGTH_LONG).show();
+                Snackbar.make(rootView, "End Date is required", Snackbar.LENGTH_LONG).show();
                 return null;
             }
 
             if(startDatetime.getTime() < endDatetime.getTime()) {
-                Snackbar.make(binding.getRoot(), "End Date must be greater than Start Date", Snackbar.LENGTH_LONG).show();
+                Snackbar.make(rootView, "End Date must be greater than Start Date", Snackbar.LENGTH_LONG).show();
                 return null;
             }
 
             if (cost < 0) {
-                Snackbar.make(binding.getRoot(), "Cost cannot be 0", Snackbar.LENGTH_LONG).show();
+                Snackbar.make(rootView, "Cost cannot be 0", Snackbar.LENGTH_LONG).show();
                 return null;
             }
 
             if (availableSeats < 0) {
-                Snackbar.make(binding.getRoot(), "Seats cannot be 0", Snackbar.LENGTH_LONG).show();
+                Snackbar.make(rootView, "Seats cannot be 0", Snackbar.LENGTH_LONG).show();
                 return null;
             }
 

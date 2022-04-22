@@ -17,7 +17,6 @@ import java.util.List;
 
 public class TransactionsHelper {
 
-    protected static final Long fees = 1000L;
     protected static final Long escrowMinBalance = 1000000L;
 
     public TransactionsHelper() {

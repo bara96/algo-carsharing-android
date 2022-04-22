@@ -61,10 +61,8 @@ public class CreateTripModel implements BaseTripModel {
         return args;
     }
 
-    protected Future<Long> datetimeToRounds(AlgodClient client, Date date) {
+    public Future<Long> datetimeToRounds(AlgodClient client, Date date) {
         return new Future<Long>() {
-
-            protected Long firstValidRound = 0L;
             @Override
             public boolean cancel(boolean b) {
                 return false;
@@ -95,9 +93,8 @@ public class CreateTripModel implements BaseTripModel {
 
                     double nBlocksProduced = diffSeconds / Constants.blockSpeed;
                     double round = status.execute().body().lastRound + nBlocksProduced;
-                    firstValidRound = Math.round(round);
 
-                    return firstValidRound;
+                    return Math.round(round);
                 } catch (Exception e) {
                     throw new CompletionException(e);
                 }
