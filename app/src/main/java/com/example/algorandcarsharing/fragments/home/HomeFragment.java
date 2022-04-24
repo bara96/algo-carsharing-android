@@ -1,12 +1,9 @@
 package com.example.algorandcarsharing.fragments.home;
 
-import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -15,21 +12,16 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.algorand.algosdk.v2.client.model.Application;
-import com.algorand.algosdk.v2.client.model.ApplicationResponse;
 import com.algorand.algosdk.v2.client.model.Transaction;
-import com.algorand.algosdk.v2.client.model.TransactionsResponse;
 import com.example.algorandcarsharing.adapters.TripAdapter;
 import com.example.algorandcarsharing.databinding.FragmentHomeBinding;
-import com.example.algorandcarsharing.services.ApplicationService;
+import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.services.IndexerService;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.function.Function;
 
 public class HomeFragment extends Fragment {
 
@@ -63,7 +55,6 @@ public class HomeFragment extends Fragment {
                             CompletableFuture.supplyAsync(indexerService.getTransactions())
                                     .thenAcceptAsync(result -> {
                                         List<Application> apps = searchApplications(result.transactions);
-                                        System.out.println(apps);
 
                                         // remove old elements
                                         int size = tripAdapter.getItemCount();
@@ -74,6 +65,7 @@ public class HomeFragment extends Fragment {
                                         applications.addAll(apps);
                                         requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeInserted(0, applications.size()));
 
+                                        LogHelper.log("getTransactions()", result.toString());
                                         Snackbar.make(rootView, "Refreshed", Snackbar.LENGTH_LONG).show();
                                     })
                                     .exceptionally(e->{
@@ -82,6 +74,7 @@ public class HomeFragment extends Fragment {
                                         applications.clear();
                                         requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeRemoved(0, size));
 
+                                        LogHelper.error("getTransactions()", e);
                                         Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_SHORT).show();
                                         return null;
                                     })
@@ -92,7 +85,7 @@ public class HomeFragment extends Fragment {
                         }
                         catch (Exception e) {
                             binding.swipe.setRefreshing(false);
-                            Log.e("Request Error", e.getMessage());
+                            LogHelper.error("getTransactions()", e);
                             Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
                         }
                 });
@@ -117,13 +110,14 @@ public class HomeFragment extends Fragment {
                             if(!result.application.deleted) {
                                 validApplications.add(result.application);
                             }
-                        }).exceptionally(e->{
-                            Log.e("Request Error", e.getMessage());
-                        return null;
-                    }));
+                        })
+                        .exceptionally(e->{
+                            LogHelper.error("getApplication()", e, false);
+                            return null;
+                        }));
             }
             catch (Exception e) {
-                Log.e("Request Error", e.getMessage());
+                LogHelper.error("getApplication()", e, false);
             }
         }
         futureList.forEach(CompletableFuture::join);

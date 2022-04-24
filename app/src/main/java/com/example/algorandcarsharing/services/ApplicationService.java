@@ -1,28 +1,28 @@
 package com.example.algorandcarsharing.services;
 
 import android.content.Context;
-import android.util.Log;
 
+import com.algorand.algosdk.account.Account;
 import com.algorand.algosdk.crypto.TEALProgram;
 import com.algorand.algosdk.logic.StateSchema;
-import com.algorand.algosdk.account.Account;
 import com.algorand.algosdk.transaction.SignedTransaction;
 import com.algorand.algosdk.transaction.Transaction;
-import com.algorand.algosdk.v2.client.algod.GetStatus;
+import com.algorand.algosdk.util.Encoder;
 import com.algorand.algosdk.v2.client.common.AlgodClient;
 import com.algorand.algosdk.v2.client.common.Response;
 import com.algorand.algosdk.v2.client.model.CompileResponse;
+import com.algorand.algosdk.v2.client.model.NodeStatusResponse;
 import com.algorand.algosdk.v2.client.model.PendingTransactionResponse;
+import com.algorand.algosdk.v2.client.model.PostTransactionsResponse;
 import com.example.algorandcarsharing.constants.ApplicationConstants;
 import com.example.algorandcarsharing.constants.ClientConstants;
-import com.example.algorandcarsharing.constants.Constants;
+import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.helpers.TransactionsHelper;
-import com.example.algorandcarsharing.helpers.UtilitiesHelper;
-import com.example.algorandcarsharing.models.BaseTripModel;
+import com.example.algorandcarsharing.helpers.UtilsHelper;
+import com.example.algorandcarsharing.models.TripModel;
 import com.example.algorandcarsharing.models.CreateTripModel;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
@@ -32,7 +32,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 
-public class ApplicationService implements BaseService {
+public class ApplicationService extends BaseService {
 
     protected AlgodClient client;
     protected String clientAddress = ClientConstants.algodClientAddress;
@@ -40,8 +40,7 @@ public class ApplicationService implements BaseService {
     protected int clientPort = ClientConstants.algodCClientPort;
     protected String transactionNote;
 
-    protected final Long maxWaitingTime = 30000L;
-    protected boolean showLogs = true;
+    protected final Long maxWaitingRounds = 1000L;
 
     public enum ProgramType  {
         ApprovalState,
@@ -63,62 +62,129 @@ public class ApplicationService implements BaseService {
         this.client = this.connectToClient();
     }
 
-    /**
-     * Connect to indexer Client
-     * @return Client
-     */
+    @Override
     public AlgodClient connectToClient() {
         return new AlgodClient(this.clientAddress, this.clientPort, this.clientToken);
     }
 
+    @Override
     public AlgodClient getClient() {
         return client;
     }
 
-    protected TEALProgram getCompiledProgram(Context context, ProgramType programType) {
-        String programFile = "";
-        switch (programType) {
-            case ApprovalState: programFile = "contracts/carsharing_approval.teal"; break;
-            case ClearState: programFile = "contracts/carsharing_clear_state.teal"; break;
-        }
-        try {
-            String program = UtilitiesHelper.readAssetFile(context, programFile);
-            Response<CompileResponse> response = client.TealCompile().source(program.getBytes(StandardCharsets.UTF_8)).execute();
-            CompileResponse programCompiled = response.body();
-            return new TEALProgram(programCompiled.result);
-        }
-        catch (Exception e) {
-            Log.e(this.getClass().getName(), e.getMessage());
-            throw new CompletionException(e);
-        }
-    }
-
     public Supplier<Long> createApplication(Context context, Account sender, CreateTripModel tripArgs) {
-        return new Supplier<Long>() {
-            @Override
-            public Long get() {
+        return () -> {
                 try {
-                    TEALProgram approvalProgram = getCompiledProgram(context, ProgramType.ApprovalState);
-                    TEALProgram clearStateProgram = getCompiledProgram(context, ProgramType.ClearState);
+                    TEALProgram approvalProgram = getCompiledProgram(context, ProgramType.ApprovalState).get();
+                    TEALProgram clearStateProgram = getCompiledProgram(context, ProgramType.ClearState).get();
 
-                    StateSchema globalState = BaseTripModel.getGlobalStateSchema();
-                    StateSchema localState = BaseTripModel.getLocalStateSchema();
+                    StateSchema globalState = TripModel.getGlobalStateSchema();
+                    StateSchema localState = TripModel.getLocalStateSchema();
 
                     List<byte[]> args = tripArgs.getArgs(client);
 
+                    // create txn
                     Transaction txn = TransactionsHelper.create_txn(client, sender, approvalProgram, clearStateProgram, globalState, localState, args);
                     SignedTransaction signedTxn = sender.signTransaction(txn);
 
-                    PendingTransactionResponse response = waitForConfirmation(signedTxn.transactionID).get();
-                    if(showLogs) {
-                        Log.d(this.getClass().getName(), String.format("Created new app-id: %s", response.applicationIndex));
-                    }
+                    // send txn
+                    String txId = sendTransaction(signedTxn).get();
+
+                    // wait for txn confirmation
+                    PendingTransactionResponse response = waitForConfirmation(txId).get();
+
+                    LogHelper.log(this.getClass().getName(), String.format("Created new app-id: %s", response.applicationIndex));
                     return response.applicationIndex;
                 }
                 catch (Exception e) {
-                    Log.e(this.getClass().getName(), e.getMessage());
                     throw new CompletionException(e);
                 }
+        };
+    }
+
+    public Future<TEALProgram> getCompiledProgram(Context context, ProgramType programType) {
+        return new Future<TEALProgram>() {
+
+            @Override
+            public boolean cancel(boolean b) {
+                return false;
+            }
+
+            @Override
+            public boolean isCancelled() {
+                return false;
+            }
+
+            @Override
+            public boolean isDone() {
+                return false;
+            }
+
+            @Override
+            public TEALProgram get() throws ExecutionException, InterruptedException {
+                try {
+                    String programFile = "";
+                    switch (programType) {
+                        case ApprovalState: programFile = "contracts/carsharing_approval.teal"; break;
+                        case ClearState: programFile = "contracts/carsharing_clear_state.teal"; break;
+                    }
+
+                    String program = UtilsHelper.readAssetFile(context, programFile);
+                    Response<CompileResponse> response = client.TealCompile().source(program.getBytes(StandardCharsets.UTF_8)).execute();
+                    checkResponse(response);
+
+                    CompileResponse programCompiled = response.body();
+                    return new TEALProgram(programCompiled.result);
+                }
+                catch (Exception e) {
+                    throw new CompletionException(e);
+                }
+            }
+
+            @Override
+            public TEALProgram get(long l, TimeUnit timeUnit) throws ExecutionException, InterruptedException, TimeoutException {
+                return this.get();
+            }
+        };
+    }
+
+    public Future<String> sendTransaction(SignedTransaction txn) {
+        return new Future<String>() {
+            @Override
+            public boolean cancel(boolean b) {
+                return false;
+            }
+
+            @Override
+            public boolean isCancelled() {
+                return false;
+            }
+
+            @Override
+            public boolean isDone() {
+                return false;
+            }
+
+            @Override
+            public String get() {
+                try {
+                    // Submit the transaction to the network
+                    byte[] encodedTxBytes = Encoder.encodeToMsgPack(txn);
+                    Response<PostTransactionsResponse> response = client.RawTransaction().rawtxn(encodedTxBytes).execute();
+                    checkResponse(response);
+
+                    String txID = response.body().txId;
+                    LogHelper.log(this.getClass().getName(), "Sent transaction with ID: " + txID);
+                    return txID;
+                }
+                catch (Exception e) {
+                    throw new CompletionException(e);
+                }
+            }
+
+            @Override
+            public String get(long l, TimeUnit timeUnit) {
+                return this.get();
             }
         };
     }
@@ -141,34 +207,45 @@ public class ApplicationService implements BaseService {
             }
 
             @Override
-            public PendingTransactionResponse get() throws ExecutionException, InterruptedException {
+            public PendingTransactionResponse get() {
                 try {
-                    long startTime = System.currentTimeMillis(); //fetch starting time
-                    Long lastRound = client.GetStatus().execute().body().lastRound;
-                    while ((System.currentTimeMillis()-startTime) < maxWaitingTime) {
-                        // Check the pending transactions
-                        Response<PendingTransactionResponse> pendingInfo = client.PendingTransactionInformation(txID).execute();
-                        if (pendingInfo.body() != null && pendingInfo.body().confirmedRound != null && pendingInfo.body().confirmedRound > 0) {
-                            // Got the completed Transaction
-                            if (showLogs) {
-                                Log.d(this.getClass().getName(), "Transaction " + txID + " confirmed in round " + pendingInfo.body().confirmedRound);
-                            }
-                            return pendingInfo.body();
+                    Response<NodeStatusResponse> statusResponse = client.GetStatus().execute();
+                    checkResponse(statusResponse);
+
+                    long lastRound = statusResponse.body().lastRound;
+                    long currentRound = lastRound + 1;
+                    while (true) {
+                        if(currentRound > lastRound + maxWaitingRounds) {
+                            throw new Exception("Timeout on waiting for confirmation");
                         }
-                        lastRound++;
-                        client.WaitForBlock(lastRound).execute();
+
+                        try {
+                            // Check the pending transactions
+                            Response<PendingTransactionResponse> pendingInfoResponse = client.PendingTransactionInformation(txID).execute();
+                            checkResponse(pendingInfoResponse);
+
+                            if (pendingInfoResponse.body().confirmedRound != null && pendingInfoResponse.body().confirmedRound > 0) {
+                                // Got the completed Transaction
+                                LogHelper.log(this.getClass().getName(), "Transaction " + txID + " confirmed in round " + pendingInfoResponse.body().confirmedRound);
+                                return pendingInfoResponse.body();
+                            }
+                            client.WaitForBlock(currentRound).execute();
+                            currentRound++;
+                        }
+                        catch (Exception e) {
+                            LogHelper.error("waitForConfirmation txn: " + txID, e, false);
+                        }
                     }
-                    throw new Exception("Timeout on waiting for confirmation");
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     throw new CompletionException(e);
                 }
             }
 
             @Override
-            public PendingTransactionResponse get(long l, TimeUnit timeUnit) throws ExecutionException, InterruptedException, TimeoutException {
+            public PendingTransactionResponse get(long l, TimeUnit timeUnit) {
                 return this.get();
             }
         };
     }
-
 }

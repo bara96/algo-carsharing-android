@@ -3,7 +3,6 @@ package com.example.algorandcarsharing.fragments.account;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,9 +12,9 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.algorandcarsharing.databinding.FragmentAccountBinding;
-import com.example.algorandcarsharing.services.AccountService;
-import com.example.algorandcarsharing.services.ApplicationService;
+import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.models.AccountModel;
+import com.example.algorandcarsharing.services.AccountService;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.concurrent.CompletableFuture;
@@ -65,7 +64,7 @@ public class AccountFragment extends Fragment {
                 Snackbar.make(rootView, "Account Saved", Snackbar.LENGTH_LONG).show();
             }
             catch (Exception e) {
-                Log.e("Error saving account", e.getMessage());
+                LogHelper.error("Error saving account", e);
                 Snackbar.make(rootView, String.format("Error while saving the account: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
             }
             saveAccountData();
@@ -78,10 +77,12 @@ public class AccountFragment extends Fragment {
                             CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
                                     .thenAcceptAsync(result -> {
                                         account.setAccountInfo(result);
+                                        LogHelper.log("getAccountInfo()", result.toString());
                                         Snackbar.make(rootView, "Account Refreshed", Snackbar.LENGTH_LONG).show();
                                     })
                                     .exceptionally(e->{
                                         account.setAccountInfo(null);
+                                        LogHelper.error("getAccountInfo()", e);
                                         Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
                                         return null;
                                     })
@@ -93,7 +94,7 @@ public class AccountFragment extends Fragment {
                         }
                         catch (Exception e) {
                             binding.swipe.setRefreshing(false);
-                            Log.e("Error getAccountInfo()", e.getMessage());
+                            LogHelper.error("getAccountInfo()", e);
                             Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
                         }
                     }

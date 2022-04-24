@@ -1,10 +1,7 @@
 package com.example.algorandcarsharing;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -20,7 +17,6 @@ import com.example.algorandcarsharing.databinding.ActivityMainBinding;
 import com.example.algorandcarsharing.models.AccountModel;
 import com.example.algorandcarsharing.services.IndexerService;
 import com.google.android.material.navigation.NavigationView;
-import com.google.android.material.snackbar.Snackbar;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -51,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(binding.appBarMain.toolbar);
         binding.appBarMain.fab.setOnClickListener(view -> {
-            Intent intent = new Intent(this, TripCreate.class);
+            Intent intent = new Intent(this, TripCreateActivity.class);
             startActivity(intent);
         });
 

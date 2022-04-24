@@ -1,19 +1,12 @@
 package com.example.algorandcarsharing;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
+import android.os.Bundle;
+import android.view.View;
+
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.DatePickerDialog;
-import android.app.TimePickerDialog;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.DatePicker;
-
-import com.algorand.algosdk.crypto.TEALProgram;
 import com.example.algorandcarsharing.databinding.ActivityTripCreateBinding;
-import com.example.algorandcarsharing.helpers.TransactionsHelper;
+import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.models.AccountModel;
 import com.example.algorandcarsharing.models.CreateTripModel;
 import com.example.algorandcarsharing.pickers.DateSetter;
@@ -23,13 +16,10 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-public class TripCreate extends AppCompatActivity {
+public class TripCreateActivity extends AppCompatActivity {
 
     private ActivityTripCreateBinding binding;
     private AccountModel account;
@@ -60,7 +50,7 @@ public class TripCreate extends AppCompatActivity {
                 saveTrip(tripData);
             }
             catch (Exception e) {
-                Log.e("Error saving trip", e.getMessage());
+                LogHelper.error("Error saving trip", e);
                 Snackbar.make(rootView, String.format("Error while creating the trip: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
             }
 
@@ -74,7 +64,7 @@ public class TripCreate extends AppCompatActivity {
                 }
             }
             catch (Exception e) {
-                Log.e("Error saving trip", e.getMessage());
+                LogHelper.error("Error saving trip", e);
                 Snackbar.make(rootView, String.format("Error while creating the trip: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
             }
         });
@@ -122,11 +112,11 @@ public class TripCreate extends AppCompatActivity {
             try {
                 CompletableFuture.supplyAsync(applicationService.createApplication(this, account.getAccount(), tripData))
                         .thenAcceptAsync(result -> {
-                            Log.d("createApplication()", "success");
-                            System.out.println(result);
+                            LogHelper.log("createApplication()", result.toString());
                             Snackbar.make(rootView, String.format("Trip created with id: %s", result), Snackbar.LENGTH_LONG).show();
                         })
                         .exceptionally(e->{
+                            LogHelper.error("createApplication()", e);
                             account.setAccountInfo(null);
                             Snackbar.make(rootView, String.format("Error during creation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
                             return null;
@@ -138,7 +128,7 @@ public class TripCreate extends AppCompatActivity {
             }
             catch (Exception e) {
                 binding.progressBar.setVisibility(View.GONE);
-                Log.e("Error createApplication()", e.getMessage());
+                LogHelper.error("createApplication()", e);
                 Snackbar.make(rootView, String.format("Error during creation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
             }
         }

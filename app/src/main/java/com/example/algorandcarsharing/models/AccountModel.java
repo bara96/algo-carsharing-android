@@ -3,8 +3,8 @@ package com.example.algorandcarsharing.models;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.example.algorandcarsharing.R;
 import com.algorand.algosdk.account.Account;
+import com.example.algorandcarsharing.R;
 
 public class AccountModel {
 

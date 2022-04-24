@@ -1,10 +1,5 @@
 package com.example.algorandcarsharing.constants;
 
-import android.content.Context;
-
-import java.io.IOException;
-import java.io.InputStream;
-
 public class ClientConstants {
 
     // Client related Constants

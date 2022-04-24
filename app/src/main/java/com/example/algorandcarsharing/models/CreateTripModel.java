@@ -1,15 +1,11 @@
 package com.example.algorandcarsharing.models;
 
-import android.os.Build;
 import android.util.Log;
 
-import androidx.annotation.RequiresApi;
-
-import com.algorand.algosdk.crypto.TEALProgram;
 import com.algorand.algosdk.v2.client.algod.GetStatus;
 import com.algorand.algosdk.v2.client.common.AlgodClient;
 import com.example.algorandcarsharing.constants.Constants;
-import com.google.common.primitives.Bytes;
+import com.example.algorandcarsharing.helpers.LogHelper;
 
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
@@ -22,9 +18,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Supplier;
 
-public class CreateTripModel implements BaseTripModel {
+public class CreateTripModel implements TripModel {
 
     protected String creatorName;
     protected String startAddress;
@@ -116,8 +111,8 @@ public class CreateTripModel implements BaseTripModel {
         int cost = Integer.parseInt("5000");
         int availableSeats = Integer.parseInt("4");
 
-        Date dateStart = new SimpleDateFormat("yyyy/MM/dd").parse(startDate);
-        Date dateEnd = new SimpleDateFormat("yyyy/MM/dd").parse(endDate);
+        Date dateStart = new SimpleDateFormat("yyyy/MM/dd HH:mm").parse(startDate);
+        Date dateEnd = new SimpleDateFormat("yyyy/MM/dd HH:mm").parse(endDate);
 
         return new CreateTripModel(creatorName, startAddress, endAddress, dateStart, dateEnd, cost, availableSeats);
     }

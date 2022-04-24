@@ -2,12 +2,12 @@ package com.example.algorandcarsharing.helpers;
 
 import android.util.Log;
 
+import com.algorand.algosdk.account.Account;
 import com.algorand.algosdk.crypto.TEALProgram;
 import com.algorand.algosdk.logic.StateSchema;
-import com.algorand.algosdk.v2.client.common.AlgodClient;
-import com.algorand.algosdk.account.Account;
-import com.algorand.algosdk.transaction.Transaction;
 import com.algorand.algosdk.transaction.SignedTransaction;
+import com.algorand.algosdk.transaction.Transaction;
+import com.algorand.algosdk.v2.client.common.AlgodClient;
 import com.algorand.algosdk.v2.client.common.Response;
 import com.algorand.algosdk.v2.client.model.TransactionParametersResponse;
 import com.example.algorandcarsharing.constants.ClientConstants;
@@ -23,9 +23,7 @@ public class TransactionsHelper {
     }
 
     public static SignedTransaction signedTransaction(Transaction transaction, Account account) throws NoSuchAlgorithmException {
-        SignedTransaction signedTxn = account.signTransaction(transaction);
-        Log.d(TransactionsHelper.class.getName(),"Signed transaction with txid: " + signedTxn.transactionID);
-        return signedTxn;
+        return account.signTransaction(transaction);
     }
 
     public static Transaction create_txn(AlgodClient client, Account sender, TEALProgram approvalProgram, TEALProgram clearStateProgram, StateSchema globalStateSchema, StateSchema localStateSchema, List<byte[]> args) throws Exception {
@@ -38,6 +36,8 @@ public class TransactionsHelper {
         if (params == null) {
             throw new Exception("Params retrieval error");
         }
+
+        System.out.println(approvalProgram);
 
         return Transaction.ApplicationCreateTransactionBuilder()
                 .suggestedParams(params)

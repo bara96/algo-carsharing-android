@@ -2,9 +2,8 @@ package com.example.algorandcarsharing.models;
 
 
 import com.algorand.algosdk.logic.StateSchema;
-import com.algorand.algosdk.v2.client.model.Application;
 
-public interface BaseTripModel {
+public interface TripModel {
 
     // global state fields
     public static StateSchema getGlobalStateSchema() {
