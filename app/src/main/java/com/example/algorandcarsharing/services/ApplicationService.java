@@ -17,6 +17,7 @@ import com.algorand.algosdk.v2.client.model.PostTransactionsResponse;
 import com.example.algorandcarsharing.constants.ApplicationConstants;
 import com.example.algorandcarsharing.constants.ClientConstants;
 import com.example.algorandcarsharing.helpers.LogHelper;
+import com.example.algorandcarsharing.helpers.ServicesHelper;
 import com.example.algorandcarsharing.helpers.TransactionsHelper;
 import com.example.algorandcarsharing.helpers.UtilsHelper;
 import com.example.algorandcarsharing.models.TripModel;
@@ -32,15 +33,13 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 
-public class ApplicationService extends BaseService {
+public class ApplicationService implements BaseService {
 
     protected AlgodClient client;
     protected String clientAddress = ClientConstants.algodClientAddress;
     protected String clientToken = ClientConstants.algodCClientToken;
     protected int clientPort = ClientConstants.algodCClientPort;
     protected String transactionNote;
-
-    protected final Long maxWaitingRounds = 1000L;
 
     public enum ProgramType  {
         ApprovalState,
@@ -88,10 +87,10 @@ public class ApplicationService extends BaseService {
                     SignedTransaction signedTxn = sender.signTransaction(txn);
 
                     // send txn
-                    String txId = sendTransaction(signedTxn).get();
+                    String txId = TransactionsHelper.sendTransaction(client, signedTxn);
 
                     // wait for txn confirmation
-                    PendingTransactionResponse response = waitForConfirmation(txId).get();
+                    PendingTransactionResponse response = TransactionsHelper.waitForConfirmation(client, txId);
 
                     LogHelper.log(this.getClass().getName(), String.format("Created new app-id: %s", response.applicationIndex));
                     return response.applicationIndex;
@@ -102,7 +101,62 @@ public class ApplicationService extends BaseService {
         };
     }
 
-    public Future<TEALProgram> getCompiledProgram(Context context, ProgramType programType) {
+    protected Future<TEALProgram> getCompiledEscrow(String appId) {
+        return new Future<TEALProgram>() {
+
+            @Override
+            public boolean cancel(boolean b) {
+                return false;
+            }
+
+            @Override
+            public boolean isCancelled() {
+                return false;
+            }
+
+            @Override
+            public boolean isDone() {
+                return false;
+            }
+
+            @Override
+            public TEALProgram get() {
+                try {
+                    String program = "#pragma version 5\n" +
+                            "global GroupSize\n" +
+                            "int 2\n" +
+                            "==\n" +
+                            "assert\n" +
+                            "gtxn 0 ApplicationID\n" +
+                            "int "+ appId +"\n" +
+                            "==\n" +
+                            "assert\n" +
+                            "gtxn 1 TypeEnum\n" +
+                            "int pay\n" +
+                            "==\n" +
+                            "assert\n" +
+                            "int 1\n" +
+                            "return";
+
+                    Response<CompileResponse> response = client.TealCompile().source(program.getBytes(StandardCharsets.UTF_8)).execute();
+                    ServicesHelper.checkResponse(response);
+
+                    CompileResponse programCompiled = response.body();
+                    return new TEALProgram(programCompiled.result);
+                }
+                catch (Exception e) {
+                    throw new CompletionException(e);
+                }
+            }
+
+            @Override
+            public TEALProgram get(long l, TimeUnit timeUnit) {
+                return this.get();
+            }
+        };
+    }
+
+    protected Future<TEALProgram> getCompiledProgram(Context context, ProgramType programType) {
         return new Future<TEALProgram>() {
 
             @Override
@@ -131,7 +185,7 @@ public class ApplicationService extends BaseService {
 
                     String program = UtilsHelper.readAssetFile(context, programFile);
                     Response<CompileResponse> response = client.TealCompile().source(program.getBytes(StandardCharsets.UTF_8)).execute();
-                    checkResponse(response);
+                    ServicesHelper.checkResponse(response);
 
                     CompileResponse programCompiled = response.body();
                     return new TEALProgram(programCompiled.result);
@@ -148,104 +202,5 @@ public class ApplicationService extends BaseService {
         };
     }
 
-    public Future<String> sendTransaction(SignedTransaction txn) {
-        return new Future<String>() {
-            @Override
-            public boolean cancel(boolean b) {
-                return false;
-            }
 
-            @Override
-            public boolean isCancelled() {
-                return false;
-            }
-
-            @Override
-            public boolean isDone() {
-                return false;
-            }
-
-            @Override
-            public String get() {
-                try {
-                    // Submit the transaction to the network
-                    byte[] encodedTxBytes = Encoder.encodeToMsgPack(txn);
-                    Response<PostTransactionsResponse> response = client.RawTransaction().rawtxn(encodedTxBytes).execute();
-                    checkResponse(response);
-
-                    String txID = response.body().txId;
-                    LogHelper.log(this.getClass().getName(), "Sent transaction with ID: " + txID);
-                    return txID;
-                }
-                catch (Exception e) {
-                    throw new CompletionException(e);
-                }
-            }
-
-            @Override
-            public String get(long l, TimeUnit timeUnit) {
-                return this.get();
-            }
-        };
-    }
-
-    public Future<PendingTransactionResponse> waitForConfirmation(String txID) {
-        return new Future<PendingTransactionResponse>() {
-            @Override
-            public boolean cancel(boolean b) {
-                return false;
-            }
-
-            @Override
-            public boolean isCancelled() {
-                return false;
-            }
-
-            @Override
-            public boolean isDone() {
-                return false;
-            }
-
-            @Override
-            public PendingTransactionResponse get() {
-                try {
-                    Response<NodeStatusResponse> statusResponse = client.GetStatus().execute();
-                    checkResponse(statusResponse);
-
-                    long lastRound = statusResponse.body().lastRound;
-                    long currentRound = lastRound + 1;
-                    while (true) {
-                        if(currentRound > lastRound + maxWaitingRounds) {
-                            throw new Exception("Timeout on waiting for confirmation");
-                        }
-
-                        try {
-                            // Check the pending transactions
-                            Response<PendingTransactionResponse> pendingInfoResponse = client.PendingTransactionInformation(txID).execute();
-                            checkResponse(pendingInfoResponse);
-
-                            if (pendingInfoResponse.body().confirmedRound != null && pendingInfoResponse.body().confirmedRound > 0) {
-                                // Got the completed Transaction
-                                LogHelper.log(this.getClass().getName(), "Transaction " + txID + " confirmed in round " + pendingInfoResponse.body().confirmedRound);
-                                return pendingInfoResponse.body();
-                            }
-                            client.WaitForBlock(currentRound).execute();
-                            currentRound++;
-                        }
-                        catch (Exception e) {
-                            LogHelper.error("waitForConfirmation txn: " + txID, e, false);
-                        }
-                    }
-                }
-                catch (Exception e) {
-                    throw new CompletionException(e);
-                }
-            }
-
-            @Override
-            public PendingTransactionResponse get(long l, TimeUnit timeUnit) {
-                return this.get();
-            }
-        };
-    }
 }

@@ -7,12 +7,13 @@ import com.algorand.algosdk.v2.client.model.Enums;
 import com.algorand.algosdk.v2.client.model.TransactionsResponse;
 import com.example.algorandcarsharing.constants.ApplicationConstants;
 import com.example.algorandcarsharing.constants.ClientConstants;
+import com.example.algorandcarsharing.helpers.ServicesHelper;
 
 import java.util.concurrent.CompletionException;
 import java.util.function.Supplier;
 
 
-public class IndexerService extends BaseService {
+public class IndexerService implements BaseService {
 
     protected IndexerClient client;
     protected String clientAddress = ClientConstants.indexerClientAddress;
@@ -49,7 +50,7 @@ public class IndexerService extends BaseService {
                         .txType(Enums.TxType.APPL)
                         .limit(100L)
                         .execute();
-                checkResponse(response);
+                ServicesHelper.checkResponse(response);
 
                 return response.body();
             }
@@ -63,7 +64,7 @@ public class IndexerService extends BaseService {
         return () -> {
             try {
                 Response<ApplicationResponse> response = client.lookupApplicationByID(appid).execute();
-                checkResponse(response);
+                ServicesHelper.checkResponse(response);
 
                 return response.body();
             }

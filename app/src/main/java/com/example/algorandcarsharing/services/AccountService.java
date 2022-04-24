@@ -6,12 +6,13 @@ import com.algorand.algosdk.v2.client.common.Response;
 import com.algorand.algosdk.v2.client.model.Account;
 import com.example.algorandcarsharing.constants.ApplicationConstants;
 import com.example.algorandcarsharing.constants.ClientConstants;
+import com.example.algorandcarsharing.helpers.ServicesHelper;
 
 import java.util.concurrent.CompletionException;
 import java.util.function.Supplier;
 
 
-public class AccountService extends BaseService {
+public class AccountService implements BaseService {
 
     protected AlgodClient client;
     protected String clientAddress = ClientConstants.algodClientAddress;
@@ -50,7 +51,7 @@ public class AccountService extends BaseService {
                 Address pk = new Address(address);
 
                 Response<Account> response = client.AccountInformation(pk).execute();
-                checkResponse(response);
+                ServicesHelper.checkResponse(response);
 
                 return response.body();
             }
