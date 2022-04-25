@@ -75,6 +75,14 @@ public class ApplicationService implements BaseService {
         return client;
     }
 
+    /**
+     * Create a new application
+     *
+     * @param context
+     * @param sender
+     * @param tripArgs
+     * @return
+     */
     public Supplier<Long> createApplication(Context context, Account sender, CreateTripModel tripArgs) {
         return () -> {
                 try {
@@ -87,7 +95,7 @@ public class ApplicationService implements BaseService {
                     List<byte[]> args = tripArgs.getArgs(client);
 
                     // create application
-                    Transaction txn = TransactionsHelper.create_txn(client, sender, approvalProgram, clearStateProgram, globalState, localState, args);
+                    Transaction txn = TransactionsHelper.create_txn(client, sender.getAddress(), approvalProgram, clearStateProgram, globalState, localState, args);
                     SignedTransaction signedTxn = sender.signTransaction(txn);
 
                     String txId = TransactionsHelper.sendTransaction(client, signedTxn);
@@ -102,23 +110,36 @@ public class ApplicationService implements BaseService {
         };
     }
 
+    /**
+     * Initialize the escrow
+     *
+     * @param appId
+     * @param sender
+     * @return
+     */
     public Supplier<Long> initializeEscrow(Long appId, Account sender) {
         return () -> {
             try {
-                // create escrow
+                // get escrow address
                 Address escrowAddress = getEscrowAddress(appId).get();
 
-                // set parameters
                 List<byte[]> args  = new ArrayList<>();
                 args.add(TripModel.AppMethod.InitializeEscrow.getValue().getBytes());
                 args.add(escrowAddress.getBytes());
 
-                // call application
-                Transaction txn = TransactionsHelper.noop_txn(client, appId, sender, args);
+                // link the escrow to the application
+                Transaction txn = TransactionsHelper.noop_txn(client, appId, sender.getAddress(), args);
                 SignedTransaction signedTxn = sender.signTransaction(txn);
 
                 String txId = TransactionsHelper.sendTransaction(client, signedTxn);
                 PendingTransactionResponse response = TransactionsHelper.waitForConfirmation(client, txId);
+
+                // fund escrow
+                Transaction payment_txn = TransactionsHelper.payment_txn(client, sender.getAddress(), escrowAddress, TransactionsHelper.escrowMinBalance);
+                SignedTransaction payment_signedTxn = sender.signTransaction(payment_txn);
+
+                String payment_txId = TransactionsHelper.sendTransaction(client, payment_signedTxn);
+                PendingTransactionResponse payment_response = TransactionsHelper.waitForConfirmation(client, payment_txId);
 
                 LogHelper.log(this.getClass().getName(), String.format("Escrow initialized for app-id %s with address: %s", appId, escrowAddress));
                 return appId;

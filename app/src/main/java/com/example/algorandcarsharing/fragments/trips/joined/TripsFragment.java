@@ -11,8 +11,9 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.algorandcarsharing.databinding.FragmentTripsJoinedBinding;
+import com.example.algorandcarsharing.fragments.AccountBasedFragment;
 
-public class TripsFragment extends Fragment {
+public class TripsFragment extends AccountBasedFragment {
 
     private FragmentTripsJoinedBinding binding;
 

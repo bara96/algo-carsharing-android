@@ -3,6 +3,7 @@ package com.example.algorandcarsharing.helpers;
 import android.util.Log;
 
 import com.algorand.algosdk.account.Account;
+import com.algorand.algosdk.crypto.Address;
 import com.algorand.algosdk.crypto.TEALProgram;
 import com.algorand.algosdk.logic.StateSchema;
 import com.algorand.algosdk.transaction.SignedTransaction;
@@ -14,6 +15,7 @@ import com.algorand.algosdk.v2.client.model.NodeStatusResponse;
 import com.algorand.algosdk.v2.client.model.PendingTransactionResponse;
 import com.algorand.algosdk.v2.client.model.PostTransactionsResponse;
 import com.algorand.algosdk.v2.client.model.TransactionParametersResponse;
+import com.example.algorandcarsharing.constants.ApplicationConstants;
 import com.example.algorandcarsharing.constants.ClientConstants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -25,8 +27,8 @@ import java.util.concurrent.TimeUnit;
 
 public class TransactionsHelper {
 
-    protected static final Long escrowMinBalance = 1000000L;
-    protected static final Long maxWaitingRounds = 1000L;
+    public static final Long escrowMinBalance = 1000000L;
+    public static final Long maxWaitingRounds = 1000L;
 
     public TransactionsHelper() {
     }
@@ -76,8 +78,8 @@ public class TransactionsHelper {
         }
     }
 
-    public static Transaction create_txn(AlgodClient client, Account sender, TEALProgram approvalProgram, TEALProgram clearStateProgram, StateSchema globalStateSchema, StateSchema localStateSchema, List<byte[]> args) throws Exception {
-        String transactionNote = ClientConstants.indexerClientAddress;
+    public static Transaction create_txn(AlgodClient client, Address sender, TEALProgram approvalProgram, TEALProgram clearStateProgram, StateSchema globalStateSchema, StateSchema localStateSchema, List<byte[]> args) throws Exception {
+        String transactionNote = ApplicationConstants.transactionNote;
         Response<TransactionParametersResponse> response = client.TransactionParams().execute();
         ServicesHelper.checkResponse(response);
 
@@ -89,7 +91,7 @@ public class TransactionsHelper {
         return Transaction.ApplicationCreateTransactionBuilder()
                 .suggestedParams(params)
                 .note(transactionNote.getBytes())
-                .sender(sender.getAddress())
+                .sender(sender)
                 .approvalProgram(approvalProgram)
                 .clearStateProgram(clearStateProgram)
                 .globalStateSchema(globalStateSchema)
@@ -98,7 +100,7 @@ public class TransactionsHelper {
                 .build();
     }
 
-    public static Transaction noop_txn(AlgodClient client, Long appId, Account sender, List<byte[]> args) throws Exception {
+    public static Transaction noop_txn(AlgodClient client, Long appId, Address sender, List<byte[]> args) throws Exception {
         Response<TransactionParametersResponse> response = client.TransactionParams().execute();
         ServicesHelper.checkResponse(response);
 
@@ -110,8 +112,25 @@ public class TransactionsHelper {
         return Transaction.ApplicationCallTransactionBuilder()
                 .suggestedParams(params)
                 .applicationId(appId)
-                .sender(sender.getAddress())
+                .sender(sender)
                 .args(args)
+                .build();
+    }
+
+    public static Transaction payment_txn(AlgodClient client, Address sender, Address receiver, Long amount) throws Exception {
+        Response<TransactionParametersResponse> response = client.TransactionParams().execute();
+        ServicesHelper.checkResponse(response);
+
+        TransactionParametersResponse params = response.body();
+        if (params == null) {
+            throw new Exception("Params retrieval error");
+        }
+
+        return Transaction.PaymentTransactionBuilder()
+                .suggestedParams(params)
+                .sender(sender)
+                .receiver(receiver)
+                .amount(amount)
                 .build();
     }
 }

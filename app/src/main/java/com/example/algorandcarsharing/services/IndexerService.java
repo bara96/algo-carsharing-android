@@ -48,7 +48,7 @@ public class IndexerService implements BaseService {
                 Response<TransactionsResponse> response = client.searchForTransactions()
                         .notePrefix(transactionNote.getBytes())
                         .txType(Enums.TxType.APPL)
-                        .limit(100L)
+                        .limit(1000L)
                         .execute();
                 ServicesHelper.checkResponse(response);
 

@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.algorandcarsharing.databinding.FragmentAccountBinding;
+import com.example.algorandcarsharing.fragments.AccountBasedFragment;
 import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.models.AccountModel;
 import com.example.algorandcarsharing.services.AccountService;
@@ -19,20 +20,15 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.util.concurrent.CompletableFuture;
 
-public class AccountFragment extends Fragment {
+public class AccountFragment extends AccountBasedFragment {
 
     private FragmentAccountBinding binding;
-    private AccountModel account;
 
-    private AccountService accountService;
     private View rootView;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         AccountViewModel accountViewModel = new ViewModelProvider(this).get(AccountViewModel.class);
-
-        accountService = new AccountService();
-        account = new AccountModel();
 
         binding = FragmentAccountBinding.inflate(inflater, container, false);
         rootView = binding.getRoot();
@@ -117,20 +113,6 @@ public class AccountFragment extends Fragment {
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-
-        loadAccountData();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        loadAccountData();
-    }
-
-    @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
@@ -140,19 +122,12 @@ public class AccountFragment extends Fragment {
         account.saveToStorage(getActivity());
     }
 
-    private void loadAccountData() {
-        try {
-            account.loadFromStorage(getActivity());
-        }
-        catch (Exception e) {
-            Snackbar.make(rootView, String.format("Error loading account: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
-            e.printStackTrace();
-        }
+    @Override
+    protected void loadAccountData() {
+        super.loadAccountData();
+
         binding.mnemonic.setText(account.getMnemonic());
         binding.address.setText(account.getAddress());
         binding.balance.setText(String.valueOf(account.getBalance()));
-        if(account.getMnemonic() == null) {
-            Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
-        }
     }
 }

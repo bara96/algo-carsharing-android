@@ -16,6 +16,7 @@ import com.algorand.algosdk.v2.client.model.Transaction;
 import com.example.algorandcarsharing.adapters.TripAdapter;
 import com.example.algorandcarsharing.databinding.FragmentHomeBinding;
 import com.example.algorandcarsharing.helpers.LogHelper;
+import com.example.algorandcarsharing.helpers.ServicesHelper;
 import com.example.algorandcarsharing.services.IndexerService;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -27,7 +28,7 @@ public class HomeFragment extends Fragment {
 
     private FragmentHomeBinding binding;
 
-    private IndexerService indexerService;
+    private final IndexerService indexerService = new IndexerService();
     private View rootView;
 
     protected TripAdapter tripAdapter;
@@ -37,8 +38,6 @@ public class HomeFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
         HomeViewModel homeViewModel =
                 new ViewModelProvider(this).get(HomeViewModel.class);
-
-        indexerService = new IndexerService();
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         rootView = binding.getRoot();
@@ -65,7 +64,8 @@ public class HomeFragment extends Fragment {
                                         applications.addAll(apps);
                                         requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeInserted(0, applications.size()));
 
-                                        LogHelper.log("getTransactions()", result.toString());
+                                        LogHelper.log("Valid Apps", apps.toString());
+                                        LogHelper.log("getTransactions", result.toString());
                                         Snackbar.make(rootView, "Refreshed", Snackbar.LENGTH_LONG).show();
                                     })
                                     .exceptionally(e->{
@@ -74,7 +74,7 @@ public class HomeFragment extends Fragment {
                                         applications.clear();
                                         requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeRemoved(0, size));
 
-                                        LogHelper.error("getTransactions()", e);
+                                        LogHelper.error("getTransactions", e);
                                         Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_SHORT).show();
                                         return null;
                                     })
@@ -85,12 +85,17 @@ public class HomeFragment extends Fragment {
                         }
                         catch (Exception e) {
                             binding.swipe.setRefreshing(false);
-                            LogHelper.error("getTransactions()", e);
+                            LogHelper.error("getTransactions", e);
                             Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
                         }
                 });
 
         return rootView;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
     }
 
     @Override
@@ -108,7 +113,12 @@ public class HomeFragment extends Fragment {
                 futureList.add(CompletableFuture.supplyAsync(indexerService.getApplication(transaction.createdApplicationIndex))
                         .thenAcceptAsync(result -> {
                             if(!result.application.deleted) {
-                                validApplications.add(result.application);
+                                if(ServicesHelper.isTrustedApplication(result.application)) {
+                                    validApplications.add(result.application);
+                                }
+                                else {
+                                    LogHelper.log("getApplication()", String.format("Application %s is not a trusted application", result.application.id), LogHelper.LogType.WARNING);
+                                }
                             }
                         })
                         .exceptionally(e->{
