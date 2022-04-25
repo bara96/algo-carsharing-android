@@ -24,4 +24,8 @@ public class UtilsHelper {
 
         return new String(buffer);
     }
+
+    public static byte[] IntToBytes(Integer integer) {
+        return new byte[]{integer.byteValue()};
+    }
 }

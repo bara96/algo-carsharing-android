@@ -10,29 +10,32 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.algorandcarsharing.R;
 import com.example.algorandcarsharing.models.TripModel;
+import com.example.algorandcarsharing.models.TripSchema;
 
 import java.util.List;
 
 public class TripAdapter extends RecyclerView.Adapter<TripAdapter.ViewHolder> {
 
-    private List<TripModel> localDataSet;
+    protected List<TripModel> localDataSet;
 
     /**
      * Provide a reference to the type of views that you are using
      * (custom ViewHolder).
      */
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        private final TextView textView;
+        public final TextView title, cost, availability, startAddress, startDate, endAddress, endDate;
 
         public ViewHolder(View view) {
             super(view);
             // Define click listener for the ViewHolder's View
 
-            textView = (TextView) view.findViewById(R.id.textView);
-        }
-
-        public TextView getTextView() {
-            return textView;
+            title = view.findViewById(R.id.title);
+            cost = view.findViewById(R.id.cost);
+            availability = view.findViewById(R.id.availability);
+            startAddress = view.findViewById(R.id.start_address);
+            startDate = view.findViewById(R.id.start_date);
+            endAddress = view.findViewById(R.id.end_address);
+            endDate = view.findViewById(R.id.end_date);
         }
     }
 
@@ -62,7 +65,21 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.ViewHolder> {
 
         // Get element from your dataset at this position and replace the
         // contents of the view with that element
-        viewHolder.getTextView().setText(String.valueOf(localDataSet.get(position).id()));
+        String id = String.valueOf(localDataSet.get(position).id());
+        String cost = localDataSet.get(position).getGlobalStateKey(TripSchema.GlobalState.TripCost);
+        String availability = localDataSet.get(position).getGlobalStateKey(TripSchema.GlobalState.AvailableSeats);
+        String startAddress = localDataSet.get(position).getGlobalStateKey(TripSchema.GlobalState.DepartureAddress);
+        String startDate = localDataSet.get(position).getGlobalStateKey(TripSchema.GlobalState.DepartureDate);
+        String endAddress = localDataSet.get(position).getGlobalStateKey(TripSchema.GlobalState.ArrivalAddress);
+        String endDate = localDataSet.get(position).getGlobalStateKey(TripSchema.GlobalState.ArrivalDate);
+
+        viewHolder.title.setText(String.format("Trip n° %s", id));
+        viewHolder.cost.setText(cost);
+        viewHolder.availability.setText(availability);
+        viewHolder.startAddress.setText(startAddress);
+        viewHolder.startDate.setText(startDate);
+        viewHolder.endAddress.setText(endAddress);
+        viewHolder.endDate.setText(endDate);
     }
 
     // Return the size of your dataset (invoked by the layout manager)

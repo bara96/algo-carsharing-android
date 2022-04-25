@@ -3,6 +3,7 @@ package com.example.algorandcarsharing.models;
 import com.algorand.algosdk.v2.client.algod.GetStatus;
 import com.algorand.algosdk.v2.client.common.AlgodClient;
 import com.example.algorandcarsharing.constants.Constants;
+import com.example.algorandcarsharing.helpers.UtilsHelper;
 
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
@@ -45,10 +46,12 @@ public class CreateTripModel implements TripSchema {
         args.add(this.creatorName.getBytes(StandardCharsets.UTF_8));
         args.add(this.startAddress.getBytes(StandardCharsets.UTF_8));
         args.add(this.endAddress.getBytes(StandardCharsets.UTF_8));
+        args.add(this.tripStartDate.toString().getBytes(StandardCharsets.UTF_8));
         args.add(startDate.toString().getBytes(StandardCharsets.UTF_8));
         args.add(endDate.toString().getBytes(StandardCharsets.UTF_8));
-        args.add(this.tripCost.toString().getBytes(StandardCharsets.UTF_8));
-        args.add(this.availableSeats.toString().getBytes(StandardCharsets.UTF_8));
+        args.add(this.tripEndDate.toString().getBytes(StandardCharsets.UTF_8));
+        args.add(UtilsHelper.IntToBytes(this.tripCost));
+        args.add(UtilsHelper.IntToBytes(this.availableSeats));
 
         return args;
     }
@@ -105,8 +108,8 @@ public class CreateTripModel implements TripSchema {
         String endAddress = "Milano";
         String startDate = "2022/05/10 15:00";
         String endDate = "2022/05/10 21:00";
-        int cost = Integer.parseInt("5000");
-        int availableSeats = Integer.parseInt("4");
+        Integer cost = Integer.parseInt("5000");
+        Integer availableSeats = Integer.parseInt("4");
 
         Date dateStart = new SimpleDateFormat("yyyy/MM/dd HH:mm").parse(startDate);
         Date dateEnd = new SimpleDateFormat("yyyy/MM/dd HH:mm").parse(endDate);

@@ -7,7 +7,7 @@ public interface TripSchema {
 
     // global state fields
     public static StateSchema getGlobalStateSchema() {
-        return new StateSchema(7, 5);
+        return new StateSchema(7, 7);
     }
 
     public enum GlobalState {
@@ -16,7 +16,9 @@ public interface TripSchema {
         DepartureAddress("departure_address"),
         ArrivalAddress("arrival_address"),
         DepartureDate("departure_date"),
+        DepartureDateRound("departure_date_round"),
         ArrivalDate("arrival_date"),
+        ArrivalDateRound("arrival_date_round"),
         MaxParticipants("max_participants"),
         TripCost("trip_cost"),
         TripState("trip_state"),

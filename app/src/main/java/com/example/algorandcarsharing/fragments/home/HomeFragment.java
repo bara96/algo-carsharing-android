@@ -15,6 +15,7 @@ import com.algorand.algosdk.v2.client.model.Application;
 import com.algorand.algosdk.v2.client.model.Transaction;
 import com.example.algorandcarsharing.adapters.TripAdapter;
 import com.example.algorandcarsharing.databinding.FragmentHomeBinding;
+import com.example.algorandcarsharing.fragments.AccountBasedFragment;
 import com.example.algorandcarsharing.fragments.account.AccountFragment;
 import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.helpers.ServicesHelper;
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public class HomeFragment extends AccountFragment {
+public class HomeFragment extends AccountBasedFragment {
 
     private FragmentHomeBinding binding;
 
@@ -94,11 +95,6 @@ public class HomeFragment extends AccountFragment {
                 });
 
         return rootView;
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
     }
 
     @Override
