@@ -48,8 +48,8 @@ public class CreateTripModel implements TripSchema {
         args.add(this.endAddress.getBytes(StandardCharsets.UTF_8));
         args.add(this.tripStartDate.toString().getBytes(StandardCharsets.UTF_8));
         args.add(startDate.toString().getBytes(StandardCharsets.UTF_8));
-        args.add(endDate.toString().getBytes(StandardCharsets.UTF_8));
         args.add(this.tripEndDate.toString().getBytes(StandardCharsets.UTF_8));
+        args.add(endDate.toString().getBytes(StandardCharsets.UTF_8));
         args.add(UtilsHelper.IntToBytes(this.tripCost));
         args.add(UtilsHelper.IntToBytes(this.availableSeats));
 
