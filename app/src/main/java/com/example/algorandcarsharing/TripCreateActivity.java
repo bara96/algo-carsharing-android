@@ -24,6 +24,7 @@ public class TripCreateActivity extends AppCompatActivity {
     private ActivityTripCreateBinding binding;
     private AccountModel account;
     private View rootView;
+    CompletableFuture completableFuture;
 
     private ApplicationService applicationService;
 
@@ -107,33 +108,33 @@ public class TripCreateActivity extends AppCompatActivity {
     }
 
     private void saveTrip(CreateTripModel tripData) {
-        binding.progressBar.setVisibility(View.VISIBLE);
+        setLoading(true);
         if(tripData != null && account.getAddress() != null) {
             try {
-                CompletableFuture.supplyAsync(applicationService.createApplication(this, account.getAccount(), tripData))
+                completableFuture = CompletableFuture.supplyAsync(applicationService.createApplication(getApplicationContext(), account.getAccount(), tripData))
+                        .thenComposeAsync(result -> CompletableFuture.supplyAsync(applicationService.initializeEscrow(result, account.getAccount())))
                         .thenAcceptAsync(result -> {
-                            LogHelper.log("createApplication()", result.toString());
                             Snackbar.make(rootView, String.format("Trip created with id: %s", result), Snackbar.LENGTH_LONG).show();
                         })
                         .exceptionally(e->{
-                            LogHelper.error("createApplication()", e);
+                            LogHelper.error("CreateTrip", e);
                             account.setAccountInfo(null);
                             Snackbar.make(rootView, String.format("Error during creation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
                             return null;
                         })
                         .handle( (ok, ex) -> {
-                            binding.progressBar.setVisibility(View.GONE);
+                            runOnUiThread(() -> setLoading(false));
                             return ok;
                         });
             }
             catch (Exception e) {
-                binding.progressBar.setVisibility(View.GONE);
-                LogHelper.error("createApplication()", e);
+                setLoading(false);
+                LogHelper.error("CreateTrip", e);
                 Snackbar.make(rootView, String.format("Error during creation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
             }
         }
         else {
-            binding.progressBar.setVisibility(View.GONE);
+            setLoading(false);
             Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
         }
     }
@@ -194,5 +195,19 @@ public class TripCreateActivity extends AppCompatActivity {
             }
 
             return new CreateTripModel(creatorName, startAddress, endAddress, startDatetime, endDatetime, cost, availableSeats);
+    }
+
+    protected void setLoading(boolean isLoading) {
+        if(isLoading) {
+            binding.progressBar.setVisibility(View.VISIBLE);
+            binding.saveBt.setEnabled(false);
+            binding.saveDummyBt.setEnabled(false);
+        }
+        else {
+            binding.progressBar.setVisibility(View.GONE);
+            binding.saveBt.setEnabled(true);
+            binding.saveDummyBt.setEnabled(true);
+        }
+
     }
 }

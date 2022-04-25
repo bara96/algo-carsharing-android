@@ -3,6 +3,8 @@ package com.example.algorandcarsharing.services;
 import android.content.Context;
 
 import com.algorand.algosdk.account.Account;
+import com.algorand.algosdk.crypto.Address;
+import com.algorand.algosdk.crypto.LogicsigSignature;
 import com.algorand.algosdk.crypto.TEALProgram;
 import com.algorand.algosdk.logic.StateSchema;
 import com.algorand.algosdk.transaction.SignedTransaction;
@@ -11,9 +13,7 @@ import com.algorand.algosdk.util.Encoder;
 import com.algorand.algosdk.v2.client.common.AlgodClient;
 import com.algorand.algosdk.v2.client.common.Response;
 import com.algorand.algosdk.v2.client.model.CompileResponse;
-import com.algorand.algosdk.v2.client.model.NodeStatusResponse;
 import com.algorand.algosdk.v2.client.model.PendingTransactionResponse;
-import com.algorand.algosdk.v2.client.model.PostTransactionsResponse;
 import com.example.algorandcarsharing.constants.ApplicationConstants;
 import com.example.algorandcarsharing.constants.ClientConstants;
 import com.example.algorandcarsharing.helpers.LogHelper;
@@ -24,6 +24,9 @@ import com.example.algorandcarsharing.models.TripModel;
 import com.example.algorandcarsharing.models.CreateTripModel;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
@@ -43,6 +46,7 @@ public class ApplicationService implements BaseService {
 
     public enum ProgramType  {
         ApprovalState,
+        ApprovalStateTest,
         ClearState,
     }
 
@@ -82,14 +86,11 @@ public class ApplicationService implements BaseService {
 
                     List<byte[]> args = tripArgs.getArgs(client);
 
-                    // create txn
+                    // create application
                     Transaction txn = TransactionsHelper.create_txn(client, sender, approvalProgram, clearStateProgram, globalState, localState, args);
                     SignedTransaction signedTxn = sender.signTransaction(txn);
 
-                    // send txn
                     String txId = TransactionsHelper.sendTransaction(client, signedTxn);
-
-                    // wait for txn confirmation
                     PendingTransactionResponse response = TransactionsHelper.waitForConfirmation(client, txId);
 
                     LogHelper.log(this.getClass().getName(), String.format("Created new app-id: %s", response.applicationIndex));
@@ -101,8 +102,35 @@ public class ApplicationService implements BaseService {
         };
     }
 
-    protected Future<TEALProgram> getCompiledEscrow(String appId) {
-        return new Future<TEALProgram>() {
+    public Supplier<Long> initializeEscrow(Long appId, Account sender) {
+        return () -> {
+            try {
+                // create escrow
+                Address escrowAddress = getEscrowAddress(appId).get();
+
+                // set parameters
+                List<byte[]> args  = new ArrayList<>();
+                args.add(TripModel.AppMethod.InitializeEscrow.getValue().getBytes());
+                args.add(escrowAddress.getBytes());
+
+                // call application
+                Transaction txn = TransactionsHelper.noop_txn(client, appId, sender, args);
+                SignedTransaction signedTxn = sender.signTransaction(txn);
+
+                String txId = TransactionsHelper.sendTransaction(client, signedTxn);
+                PendingTransactionResponse response = TransactionsHelper.waitForConfirmation(client, txId);
+
+                LogHelper.log(this.getClass().getName(), String.format("Escrow initialized for app-id %s with address: %s", appId, escrowAddress));
+                return appId;
+            }
+            catch (Exception e) {
+                throw new CompletionException(e);
+            }
+        };
+    }
+
+    protected Future<Address> getEscrowAddress(Long appId) {
+        return new Future<Address>() {
 
             @Override
             public boolean cancel(boolean b) {
@@ -120,9 +148,9 @@ public class ApplicationService implements BaseService {
             }
 
             @Override
-            public TEALProgram get() {
+            public Address get() {
                 try {
-                    String program = "#pragma version 5\n" +
+                    String programSource = "#pragma version 4\n" +
                             "global GroupSize\n" +
                             "int 2\n" +
                             "==\n" +
@@ -138,11 +166,15 @@ public class ApplicationService implements BaseService {
                             "int 1\n" +
                             "return";
 
-                    Response<CompileResponse> response = client.TealCompile().source(program.getBytes(StandardCharsets.UTF_8)).execute();
+                    Response<CompileResponse> response = client.TealCompile().source(programSource.getBytes(StandardCharsets.UTF_8)).execute();
                     ServicesHelper.checkResponse(response);
 
                     CompileResponse programCompiled = response.body();
-                    return new TEALProgram(programCompiled.result);
+                    byte[] program = Base64.getDecoder().decode(programCompiled.result);
+
+                    LogicsigSignature lsig = new LogicsigSignature(program, null);
+
+                    return lsig.toAddress();
                 }
                 catch (Exception e) {
                     throw new CompletionException(e);
@@ -150,7 +182,7 @@ public class ApplicationService implements BaseService {
             }
 
             @Override
-            public TEALProgram get(long l, TimeUnit timeUnit) {
+            public Address get(long l, TimeUnit timeUnit) {
                 return this.get();
             }
         };
@@ -175,15 +207,16 @@ public class ApplicationService implements BaseService {
             }
 
             @Override
-            public TEALProgram get() throws ExecutionException, InterruptedException {
+            public TEALProgram get() {
                 try {
-                    String programFile = "";
+                    String programSource = "";
                     switch (programType) {
-                        case ApprovalState: programFile = "contracts/carsharing_approval.teal"; break;
-                        case ClearState: programFile = "contracts/carsharing_clear_state.teal"; break;
+                        case ApprovalState: programSource = "contracts/carsharing_approval.teal"; break;
+                        case ApprovalStateTest: programSource = "contracts/carsharing_approval_test.teal"; break;
+                        case ClearState: programSource = "contracts/carsharing_clear_state.teal"; break;
                     }
 
-                    String program = UtilsHelper.readAssetFile(context, programFile);
+                    String program = UtilsHelper.readAssetFile(context, programSource);
                     Response<CompileResponse> response = client.TealCompile().source(program.getBytes(StandardCharsets.UTF_8)).execute();
                     ServicesHelper.checkResponse(response);
 

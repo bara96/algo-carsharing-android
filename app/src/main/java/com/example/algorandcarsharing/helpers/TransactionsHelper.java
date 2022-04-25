@@ -97,4 +97,21 @@ public class TransactionsHelper {
                 .args(args)
                 .build();
     }
+
+    public static Transaction noop_txn(AlgodClient client, Long appId, Account sender, List<byte[]> args) throws Exception {
+        Response<TransactionParametersResponse> response = client.TransactionParams().execute();
+        ServicesHelper.checkResponse(response);
+
+        TransactionParametersResponse params = response.body();
+        if (params == null) {
+            throw new Exception("Params retrieval error");
+        }
+
+        return Transaction.ApplicationCallTransactionBuilder()
+                .suggestedParams(params)
+                .applicationId(appId)
+                .sender(sender.getAddress())
+                .args(args)
+                .build();
+    }
 }
