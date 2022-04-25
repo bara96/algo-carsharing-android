@@ -9,9 +9,14 @@
             android:icon="@drawable/ic_menu_home"
             android:title="@string/menu_home" />
         <item
-            android:id="@+id/nav_gallery"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="@string/menu_gallery" />
+            android:id="@+id/nav_trips_created"
+            android:icon="@drawable/ic_menu_car"
+            android:title="@string/menu_trips_created" />
+
+        <item
+            android:id="@+id/nav_trips_joined"
+            android:icon="@drawable/ic_menu_people"
+            android:title="@string/menu_trips_joined" />
         <item
             android:id="@+id/nav_account"
             android:icon="@drawable/ic_menu_account"

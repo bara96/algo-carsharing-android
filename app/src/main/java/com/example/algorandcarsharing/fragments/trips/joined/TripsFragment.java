@@ -1,4 +1,4 @@
-package com.example.algorandcarsharing.fragments.gallery;
+package com.example.algorandcarsharing.fragments.trips.joined;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,22 +10,23 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.algorandcarsharing.databinding.FragmentGalleryBinding;
+import com.example.algorandcarsharing.databinding.FragmentTripsJoinedBinding;
+import com.example.algorandcarsharing.fragments.AccountBasedFragment;
 
-public class GalleryFragment extends Fragment {
+public class TripsFragment extends AccountBasedFragment {
 
-    private FragmentGalleryBinding binding;
+    private FragmentTripsJoinedBinding binding;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        GalleryViewModel galleryViewModel =
-                new ViewModelProvider(this).get(GalleryViewModel.class);
+        TripsViewModel userTripsViewModel =
+                new ViewModelProvider(this).get(TripsViewModel.class);
 
-        binding = FragmentGalleryBinding.inflate(inflater, container, false);
+        binding = FragmentTripsJoinedBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
         final TextView textView = binding.textGallery;
-        galleryViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        userTripsViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
         return root;
     }
 

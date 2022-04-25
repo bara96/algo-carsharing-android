@@ -1,73 +1,102 @@
 package com.example.algorandcarsharing.fragments.account;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.algorandcarsharing.R;
 import com.example.algorandcarsharing.databinding.FragmentAccountBinding;
-import com.example.algorandcarsharing.helpers.ApplicationHelper;
+import com.example.algorandcarsharing.fragments.AccountBasedFragment;
+import com.example.algorandcarsharing.helpers.LogHelper;
+import com.example.algorandcarsharing.models.AccountModel;
+import com.example.algorandcarsharing.services.AccountService;
 import com.google.android.material.snackbar.Snackbar;
 
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CompletableFuture;
 
-public class AccountFragment extends Fragment {
+public class AccountFragment extends AccountBasedFragment {
 
     private FragmentAccountBinding binding;
-    private long balance = 0;
-    private String address = null;
 
-    private ApplicationHelper applicationHelper;
     private View rootView;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         AccountViewModel accountViewModel = new ViewModelProvider(this).get(AccountViewModel.class);
 
-        Context context = getActivity();
-        ExecutorService mExecutor = Executors.newSingleThreadExecutor();
-
-        applicationHelper = new ApplicationHelper(context);
-
         binding = FragmentAccountBinding.inflate(inflater, container, false);
         rootView = binding.getRoot();
 
+        binding.address.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if(account.getAddress() != null) {
+                    binding.addressLayout.setVisibility(View.VISIBLE);
+                }
+                else {
+                    binding.addressLayout.setVisibility(View.GONE);
+                }
+            }
+        });
         binding.saveBt.setOnClickListener(v -> {
-            address = String.valueOf(binding.addressEt.getText());
+            try {
+                String mnemonic = String.valueOf(binding.mnemonic.getText());
+                account.setMnemonic(mnemonic);
+                binding.address.setText(account.getAddress());
+                Snackbar.make(rootView, "Account Saved", Snackbar.LENGTH_LONG).show();
+            }
+            catch (Exception e) {
+                LogHelper.error("Error saving account", e);
+                Snackbar.make(rootView, String.format("Error while saving the account: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+            }
             saveAccountData();
-            Snackbar.make(rootView, "Address saved", Snackbar.LENGTH_SHORT).show();
         });
 
         binding.swipe.setOnRefreshListener(
                 () -> {
-                    if(address != null) {
-                        mExecutor.execute(() -> {
-                            try {
-                                balance = applicationHelper.getBalance(address);
-                                saveAccountData();
-                                requireActivity().runOnUiThread(() -> binding.balanceTv.setText(String.valueOf(balance)));
-                            }
-                            catch (Exception e){
-                                Log.e("Request Error", e.getMessage());
-                                Snackbar.make(rootView, String.format("Error refreshing balance: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
-
-                            }
-                            finally {
-                                binding.swipe.setRefreshing(false);
-                            }
-                        });
+                    if(account.getAddress() != null) {
+                        try {
+                            CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
+                                    .thenAcceptAsync(result -> {
+                                        account.setAccountInfo(result);
+                                        LogHelper.log("getAccountInfo()", result.toString());
+                                        Snackbar.make(rootView, "Account Refreshed", Snackbar.LENGTH_LONG).show();
+                                    })
+                                    .exceptionally(e->{
+                                        account.setAccountInfo(null);
+                                        LogHelper.error("getAccountInfo()", e);
+                                        Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+                                        return null;
+                                    })
+                                    .handle( (ok, ex) -> {
+                                        requireActivity().runOnUiThread(() -> binding.balance.setText(String.valueOf(account.getBalance())));
+                                        binding.swipe.setRefreshing(false);
+                                        return ok;
+                                    });
+                        }
+                        catch (Exception e) {
+                            binding.swipe.setRefreshing(false);
+                            LogHelper.error("getAccountInfo()", e);
+                            Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+                        }
+                    }
+                    else {
+                        binding.swipe.setRefreshing(false);
+                        Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
                     }
                 });
 
@@ -77,20 +106,10 @@ public class AccountFragment extends Fragment {
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
+    public void onPause() {
+        super.onPause();
 
-        loadAccountData();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        loadAccountData();
-        if(this.address == null) {
-            Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
-        }
+        saveAccountData();
     }
 
     @Override
@@ -100,27 +119,15 @@ public class AccountFragment extends Fragment {
     }
 
     public void saveAccountData() {
-        Context context = getActivity();
-        if (context != null) {
-            SharedPreferences sharedPref = getActivity().getSharedPreferences(getString(R.string.preferences_account), Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = sharedPref.edit();
-
-            editor.putString(getString(R.string.preference_key_address), String.valueOf(address).trim());
-            editor.putLong(getString(R.string.preference_key_balance), balance);
-            editor.apply();
-        }
+        account.saveToStorage(getActivity());
     }
 
-    private void loadAccountData() {
-        Context context = getActivity();
-        if (context != null) {
-            SharedPreferences sharedPref = context.getSharedPreferences(getString(R.string.preferences_account), Context.MODE_PRIVATE);
-            this.address = sharedPref.getString(getString(R.string.preference_key_address), null);
-            this.balance = sharedPref.getLong(getString(R.string.preference_key_balance), 0);
+    @Override
+    protected void loadAccountData() {
+        super.loadAccountData();
 
-            binding.addressEt.setText(this.address);
-            binding.balanceTv.setText(String.valueOf(this.balance));
-
-        }
+        binding.mnemonic.setText(account.getMnemonic());
+        binding.address.setText(account.getAddress());
+        binding.balance.setText(String.valueOf(account.getBalance()));
     }
 }

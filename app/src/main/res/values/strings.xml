@@ -1,26 +1,68 @@
 <resources>
-    <string name="app_name">Algorand Carsharing</string>
+    <string name="app_name">Algorand Carpooling</string>
+    <string name="activity_create_trip">Create Trip</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Algorand Carsharing</string>
+    <string name="nav_header_title">Algorand Carpooling</string>
     <string name="nav_header_subtitle">Demo Application</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
 
     <string name="menu_home">Home</string>
-    <string name="menu_gallery">Gallery</string>
+    <string name="menu_trips_created">Created Trips</string>
+    <string name="menu_trips_joined">Joined Trips</string>
     <string name="menu_account">Account</string>
 
     <string name="total_balance">Total Balance</string>
+    <string name="account_mnemonic">Account Mnemonic</string>
     <string name="account_address">Account Address</string>
     <string name="save">Save</string>
 
     <!-- Shared Preferences -->
     <string name="preferences_account">preferences_account</string>
-    <string name="preference_key_address">preference_key_address</string>
+    <string name="preference_key_mnemonic">preference_key_mnemonic</string>
     <string name="preference_key_balance">preference_key_balance</string>
 
-    <!-- env -->
-    <string name="env_transaction_note">67c8df8c4a6ef03decdfd0f174d16641</string>
+    <string name="title_activity_settings">SettingsActivity</string>
 
+    <!-- Preference Titles -->
+    <string name="messages_header">Messages</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Messages Preferences -->
+    <string name="signature_title">Your signature</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync email periodically</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails
+    </string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
+
+    <string name="availables_trips">Availables Trips</string>
+    <string name="trip_title">Title</string>
+    <string name="menu_trips_create">Create Trip</string>
+    <string name="insert_trip_data">Insert Trip Data</string>
+    <string name="creator_name">Creator Name</string>
+    <string name="start_address">Departure Address</string>
+    <string name="end_address">Arrival Address</string>
+    <string name="end_date">Arrival Date</string>
+    <string name="end_date2">Arrival Date:</string>
+    <string name="start_date">Departure Date</string>
+    <string name="start_date2">Departure Date:</string>
+    <string name="trip_cost">Trip Cost (unitary)</string>
+    <string name="available_seats">Available Seats</string>
+    <string name="create">Create</string>
+    <string name="create_dummy_trip">Create dummy trip</string>
+    <string name="end_time">Arrival Time</string>
+    <string name="start_time">Departure Time</string>
+    <string name="your_trips">Your trips</string>
+    <string name="address">Address</string>
+    <string name="trip">Trip:</string>
+    <string name="date_example">2022/05/10 15:00</string>
+    <string name="cost">Cost:</string>
+    <string name="cost_example">5000</string>
+    <string name="availability_example">3</string>
+    <string name="availability">Availability:</string>
 </resources>

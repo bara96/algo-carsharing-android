@@ -1,0 +1,435 @@
+#pragma version 5
+txn ApplicationID
+int 0
+==
+bnz main_l20
+txn OnCompletion
+int OptIn
+==
+bnz main_l19
+txn OnCompletion
+int NoOp
+==
+bnz main_l8
+txn OnCompletion
+int UpdateApplication
+==
+bnz main_l7
+txn OnCompletion
+int DeleteApplication
+==
+bnz main_l6
+err
+main_l6:
+txn Sender
+byte "creator"
+app_global_get
+==
+byte "available_seats"
+app_global_get
+byte "max_participants"
+app_global_get
+==
+byte "trip_state"
+app_global_get
+int 2
+==
+||
+&&
+return
+main_l7:
+txn Sender
+byte "creator"
+app_global_get
+==
+byte "available_seats"
+app_global_get
+byte "max_participants"
+app_global_get
+==
+&&
+byte "trip_state"
+app_global_get
+int 2
+==
+!
+&&
+return
+main_l8:
+txna ApplicationArgs 0
+byte "initializeEscrow"
+==
+bnz main_l18
+txna ApplicationArgs 0
+byte "updateTrip"
+==
+bnz main_l17
+txna ApplicationArgs 0
+byte "participateTrip"
+==
+bnz main_l16
+txna ApplicationArgs 0
+byte "cancelParticipation"
+==
+bnz main_l15
+txna ApplicationArgs 0
+byte "startTrip"
+==
+bnz main_l14
+err
+main_l14:
+byte "trip_state"
+app_global_get
+int 1
+==
+txn Sender
+byte "creator"
+app_global_get
+==
+&&
+global Round
+byte "departure_date_round"
+app_global_get
+>=
+&&
+assert
+gtxn 1 TypeEnum
+int pay
+==
+gtxn 1 Receiver
+byte "creator"
+app_global_get
+==
+&&
+gtxn 1 Sender
+byte "escrow_address"
+app_global_get
+==
+&&
+assert
+byte "trip_state"
+int 2
+app_global_put
+int 1
+return
+int 1
+return
+main_l15:
+byte "trip_state"
+app_global_get
+int 1
+==
+txn Sender
+byte "creator"
+app_global_get
+==
+!
+&&
+global Round
+byte "departure_date_round"
+app_global_get
+<=
+&&
+global GroupSize
+int 2
+==
+&&
+assert
+gtxn 1 TypeEnum
+int pay
+==
+gtxn 1 Receiver
+gtxn 0 Sender
+==
+&&
+gtxn 1 Amount
+byte "trip_cost"
+app_global_get
+==
+&&
+gtxn 1 Sender
+byte "escrow_address"
+app_global_get
+==
+&&
+assert
+int 0
+global CurrentApplicationID
+byte "is_participating"
+app_local_get_ex
+store 4
+store 5
+load 4
+load 5
+int 1
+==
+&&
+assert
+byte "available_seats"
+byte "available_seats"
+app_global_get
+int 1
++
+app_global_put
+int 0
+byte "is_participating"
+int 0
+app_local_put
+int 1
+return
+int 1
+return
+main_l16:
+byte "trip_state"
+app_global_get
+int 1
+==
+txn Sender
+byte "creator"
+app_global_get
+==
+!
+&&
+byte "available_seats"
+app_global_get
+int 0
+>
+&&
+global Round
+byte "departure_date_round"
+app_global_get
+<=
+&&
+global GroupSize
+int 2
+==
+&&
+assert
+gtxn 1 TypeEnum
+int pay
+==
+gtxn 1 Receiver
+byte "escrow_address"
+app_global_get
+==
+&&
+gtxn 1 Amount
+byte "trip_cost"
+app_global_get
+==
+&&
+gtxn 1 Sender
+gtxn 0 Sender
+==
+&&
+assert
+int 0
+global CurrentApplicationID
+byte "is_participating"
+app_local_get_ex
+store 2
+store 3
+load 2
+!
+load 3
+int 0
+==
+||
+assert
+byte "available_seats"
+byte "available_seats"
+app_global_get
+int 1
+-
+app_global_put
+int 0
+byte "is_participating"
+int 1
+app_local_put
+int 1
+return
+main_l17:
+txn NumAppArgs
+int 10
+==
+assert
+byte "available_seats"
+app_global_get
+byte "max_participants"
+app_global_get
+==
+byte "trip_state"
+app_global_get
+int 2
+==
+!
+&&
+assert
+byte "creator_name"
+txna ApplicationArgs 1
+app_global_put
+byte "departure_address"
+txna ApplicationArgs 2
+app_global_put
+byte "arrival_address"
+txna ApplicationArgs 3
+app_global_put
+byte "departure_date"
+txna ApplicationArgs 4
+app_global_put
+byte "departure_date_round"
+txna ApplicationArgs 5
+btoi
+app_global_put
+byte "arrival_date"
+txna ApplicationArgs 6
+app_global_put
+byte "arrival_date_round"
+txna ApplicationArgs 7
+btoi
+app_global_put
+byte "trip_cost"
+txna ApplicationArgs 8
+btoi
+app_global_put
+byte "max_participants"
+txna ApplicationArgs 9
+btoi
+app_global_put
+byte "available_seats"
+txna ApplicationArgs 9
+btoi
+app_global_put
+global Round
+byte "departure_date_round"
+app_global_get
+<=
+assert
+byte "departure_date_round"
+app_global_get
+byte "arrival_date_round"
+app_global_get
+<
+assert
+byte "max_participants"
+app_global_get
+int 0
+>
+assert
+int 1
+return
+main_l18:
+int 0
+byte "escrow_address"
+app_global_get_ex
+store 0
+store 1
+load 0
+int 0
+==
+assert
+global GroupSize
+int 1
+==
+assert
+txn Sender
+byte "creator"
+app_global_get
+==
+assert
+byte "escrow_address"
+txna ApplicationArgs 1
+app_global_put
+byte "trip_state"
+int 1
+app_global_put
+int 1
+return
+main_l19:
+txn Sender
+byte "creator"
+app_global_get
+==
+!
+assert
+byte "trip_state"
+app_global_get
+int 1
+==
+assert
+global Round
+byte "departure_date_round"
+app_global_get
+<=
+assert
+byte "available_seats"
+app_global_get
+int 0
+>
+assert
+int 1
+return
+main_l20:
+txn NumAppArgs
+int 9
+==
+assert
+byte "creator"
+txn Sender
+app_global_put
+byte "creator_name"
+txna ApplicationArgs 0
+app_global_put
+byte "departure_address"
+txna ApplicationArgs 1
+app_global_put
+byte "arrival_address"
+txna ApplicationArgs 2
+app_global_put
+byte "departure_date"
+txna ApplicationArgs 3
+app_global_put
+byte "departure_date_round"
+txna ApplicationArgs 4
+btoi
+app_global_put
+byte "arrival_date"
+txna ApplicationArgs 5
+app_global_put
+byte "arrival_date_round"
+txna ApplicationArgs 6
+btoi
+app_global_put
+byte "trip_cost"
+txna ApplicationArgs 7
+btoi
+app_global_put
+byte "max_participants"
+txna ApplicationArgs 8
+btoi
+app_global_put
+byte "available_seats"
+txna ApplicationArgs 8
+btoi
+app_global_put
+byte "trip_state"
+int 0
+app_global_put
+global Round
+byte "departure_date_round"
+app_global_get
+<=
+assert
+byte "departure_date_round"
+app_global_get
+byte "arrival_date_round"
+app_global_get
+<
+assert
+byte "max_participants"
+app_global_get
+int 0
+>
+assert
+int 1
+return

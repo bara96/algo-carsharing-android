@@ -1,4 +1,4 @@
-package com.example.algorandcarsharing.fragments.home;
+package com.example.algorandcarsharing.fragments.trips.created;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -6,47 +6,46 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.algorand.algosdk.crypto.Address;
 import com.algorand.algosdk.v2.client.model.Application;
+import com.algorand.algosdk.v2.client.model.TealKeyValue;
 import com.algorand.algosdk.v2.client.model.Transaction;
 import com.example.algorandcarsharing.adapters.TripAdapter;
-import com.example.algorandcarsharing.databinding.FragmentHomeBinding;
+import com.example.algorandcarsharing.databinding.FragmentTripsCreatedBinding;
 import com.example.algorandcarsharing.fragments.AccountBasedFragment;
-import com.example.algorandcarsharing.fragments.account.AccountFragment;
 import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.helpers.ServicesHelper;
 import com.example.algorandcarsharing.models.TripModel;
 import com.example.algorandcarsharing.models.TripSchema;
-import com.example.algorandcarsharing.services.IndexerService;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public class HomeFragment extends AccountBasedFragment {
+public class TripsFragment extends AccountBasedFragment {
 
-    private FragmentHomeBinding binding;
+    private FragmentTripsCreatedBinding binding;
 
-    private final IndexerService indexerService = new IndexerService();
     private View rootView;
 
     protected TripAdapter tripAdapter;
-    List<TripModel> applications;
+    List<TripModel> applications = new ArrayList<>();
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        HomeViewModel homeViewModel =
-                new ViewModelProvider(this).get(HomeViewModel.class);
+        TripsViewModel userTripsViewModel =
+                new ViewModelProvider(this).get(TripsViewModel.class);
 
-        binding = FragmentHomeBinding.inflate(inflater, container, false);
+        binding = FragmentTripsCreatedBinding.inflate(inflater, container, false);
         rootView = binding.getRoot();
 
-        applications = new ArrayList<>();
         RecyclerView tripList = binding.tripList;
         tripAdapter = new TripAdapter(applications);
         tripList.setAdapter(tripAdapter);
@@ -54,10 +53,11 @@ public class HomeFragment extends AccountBasedFragment {
 
         binding.swipe.setOnRefreshListener(
                 () -> {
+                    if(account.getAddress() != null) {
                         try {
-                            CompletableFuture.supplyAsync(indexerService.getTransactions())
+                            CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
                                     .thenAcceptAsync(result -> {
-                                        List<TripModel> apps = searchApplications(result.transactions);
+                                        List<TripModel> apps = searchApplications(result.createdApps);
 
                                         // remove old elements
                                         int size = tripAdapter.getItemCount();
@@ -68,18 +68,13 @@ public class HomeFragment extends AccountBasedFragment {
                                         applications.addAll(apps);
                                         requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeInserted(0, applications.size()));
 
-                                        LogHelper.log("Valid Apps", apps.toString());
-                                        LogHelper.log("getTransactions", result.toString());
+                                        LogHelper.log("getCreatedApplications", result.toString());
                                         Snackbar.make(rootView, "Refreshed", Snackbar.LENGTH_LONG).show();
                                     })
                                     .exceptionally(e->{
-                                        // remove old elements
-                                        int size = tripAdapter.getItemCount();
-                                        applications.clear();
-                                        requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeRemoved(0, size));
-
-                                        LogHelper.error("getTransactions", e);
-                                        Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_SHORT).show();
+                                        account.setAccountInfo(null);
+                                        LogHelper.error("getCreatedApplications", e);
+                                        Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
                                         return null;
                                     })
                                     .handle( (ok, ex) -> {
@@ -89,9 +84,10 @@ public class HomeFragment extends AccountBasedFragment {
                         }
                         catch (Exception e) {
                             binding.swipe.setRefreshing(false);
-                            LogHelper.error("getTransactions", e);
+                            LogHelper.error("getCreatedApplications", e);
                             Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
                         }
+                    }
                 });
 
         return rootView;
@@ -103,35 +99,22 @@ public class HomeFragment extends AccountBasedFragment {
         binding = null;
     }
 
-    private List<TripModel> searchApplications(List<Transaction> transactions) {
-        List<CompletableFuture> futureList=new ArrayList<>();
+    private List<TripModel> searchApplications(List<Application> applications) {
         List<TripModel> validApplications = new ArrayList<>();
-        for(int i=0; i<transactions.size(); i++) {
-            Transaction transaction = transactions.get(i);
+        for(int i=0; i<applications.size(); i++) {
             try {
-                futureList.add(CompletableFuture.supplyAsync(indexerService.getApplication(transaction.createdApplicationIndex))
-                        .thenAcceptAsync(result -> {
-                            if(!result.application.deleted) {
-                                if(ServicesHelper.isTrustedApplication(result.application)) {
-                                    TripModel trip = new TripModel(result.application);
-                                    validApplications.add(trip);
-                                }
-                                else {
-                                    LogHelper.log("getApplication()", String.format("Application %s is not a trusted application", result.application.id), LogHelper.LogType.WARNING);
-                                }
-                            }
-                        })
-                        .exceptionally(e->{
-                            LogHelper.error("getApplication()", e, false);
-                            return null;
-                        }));
+                Application app = applications.get(i);
+                if (ServicesHelper.isTrustedApplication(app)) {
+                    TripModel trip = new TripModel(app);
+                    validApplications.add(trip);
+                } else {
+                    LogHelper.log("searchApplications", String.format("Application %s is not a trusted application", app.id), LogHelper.LogType.WARNING);
+                }
             }
             catch (Exception e) {
-                LogHelper.error("getApplication()", e, false);
-            }
+                    LogHelper.error("searchApplications", e);
+                }
         }
-        futureList.forEach(CompletableFuture::join);
         return validApplications;
     }
-
 }
