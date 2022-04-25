@@ -1,11 +1,8 @@
 package com.example.algorandcarsharing.models;
 
-import android.util.Log;
-
 import com.algorand.algosdk.v2.client.algod.GetStatus;
 import com.algorand.algosdk.v2.client.common.AlgodClient;
 import com.example.algorandcarsharing.constants.Constants;
-import com.example.algorandcarsharing.helpers.LogHelper;
 
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
@@ -19,7 +16,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class CreateTripModel implements TripModel {
+public class CreateTripModel implements TripSchema {
 
     protected String creatorName;
     protected String startAddress;

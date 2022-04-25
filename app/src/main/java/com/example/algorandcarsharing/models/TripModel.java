@@ -1,109 +1,100 @@
 package com.example.algorandcarsharing.models;
 
+import com.algorand.algosdk.crypto.Address;
+import com.algorand.algosdk.util.Encoder;
+import com.algorand.algosdk.v2.client.model.Application;
+import com.algorand.algosdk.v2.client.model.ApplicationLocalState;
+import com.algorand.algosdk.v2.client.model.TealKeyValue;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
 
-import com.algorand.algosdk.logic.StateSchema;
+public class TripModel implements TripSchema {
 
-public interface TripModel {
+    protected Application application;
+    protected HashMap<String, String> globalState = new HashMap<>();
+    protected HashMap<String, String> localState = new HashMap<>();
 
-    // global state fields
-    public static StateSchema getGlobalStateSchema() {
-        return new StateSchema(7, 5);
+    public TripModel(Application application) {
+        this.application = application;
+        this.globalState = readGlobalState(application);
     }
 
-    public enum GlobalSTate {
-        Creator("creator"),
-        CreatorName("creator_name"),
-        DepartureAddress("departure_address"),
-        ArrivalAddress("arrival_address"),
-        DepartureDate("departure_date"),
-        ArrivalDate("arrival_date"),
-        MaxParticipants("max_participants"),
-        TripCost("trip_cost"),
-        TripState("trip_state"),
-        AvailableSeats("available_seats"),
-        EscrowAddress("escrow_address");
-
-        private final String value;
-
-        GlobalSTate(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
+    public Long id() {
+        return this.application.id;
     }
 
-    // local state fields
-    public static StateSchema getLocalStateSchema() {
-        return new StateSchema(1, 0);
+    public Application getApplication() {
+        return application;
     }
 
-    public enum LocalState {
-        IsParticipating("is_participating");
-
-        private final String value;
-
-        LocalState(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
+    public String getGlobalStateKey(GlobalState key) {
+        return this.globalState.getOrDefault(key.getValue(), null);
     }
 
-    // available app methods
-    public enum AppMethod {
-        InitializeEscrow("initializeEscrow"),
-        UpdateTrip("updateTrip"),
-        CancelTrip("cancelTrip"),
-        StartTrip("startTrip"),
-        Participate("participateTrip"),
-        CancelParticipation("cancelParticipation");
-
-        private final String value;
-
-        AppMethod(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
+    public String getLocalStateKey(GlobalState key) {
+        return this.localState.getOrDefault(key.getValue(), null);
     }
 
-    // trip states
-    public enum TripState {
-        NotInitialized(0),
-        Initialized(1),
-        Started(2);
-
-        private final Integer value;
-
-        TripState(Integer value) {
-            this.value = value;
-        }
-
-        public Integer getValue() {
-            return value;
-        }
+    public HashMap<String, String> getGlobalState() {
+        return globalState;
     }
 
-    // user states
-    public enum UserState {
-        Participating(1),
-        NotParticipating(0);
+    public void setGlobalState(HashMap<String, String> globalState) {
+        this.globalState = globalState;
+    }
 
-        private final Integer value;
+    public HashMap<String, String> getLocalState() {
+        return localState;
+    }
 
-        UserState(Integer value) {
-            this.value = value;
+    public void setLocalState(HashMap<String, String> localState) {
+        this.localState = localState;
+    }
+
+    public static HashMap<String, String> readLocalState(ApplicationLocalState application) {
+        if(application != null) {
+            return readState(application.keyValue);
         }
+        else
+            return new HashMap<>();
+    }
 
-        public Integer getValue() {
-            return value;
+    public static HashMap<String, String> readGlobalState(Application application) {
+        if(application.params != null && application.params.globalState != null) {
+            return readState(application.params.globalState);
         }
+        else
+            return new HashMap<>();
+    }
+
+    public static HashMap<String, String> readState(List<TealKeyValue> stateRaw) {
+        HashMap<String, String> globalState = new HashMap<>();
+
+        for(int i=0; i < stateRaw.size(); i++) {
+            TealKeyValue state = stateRaw.get(i);
+            String key = new String(Base64.getDecoder().decode(state.key));
+            String value;
+            Long type = state.value.type;
+            if(type == 1) {     // byte string
+                if(isAddress(key)) {
+                    Address add = new Address(Encoder.decodeFromBase64(state.value.bytes));
+                    value = add.toString();
+                }
+                else {
+                    value = new String(Encoder.decodeFromBase64(state.value.bytes));
+                }
+            }
+            else {      // integer
+                value = String.valueOf(state.value.uint);
+            }
+            globalState.put(key, value);
+        }
+        return globalState;
+    }
+
+    public static boolean isAddress(String key) {
+        return key.equals(GlobalState.Creator.getValue()) || key.equals(GlobalState.EscrowAddress.getValue());
     }
 
 

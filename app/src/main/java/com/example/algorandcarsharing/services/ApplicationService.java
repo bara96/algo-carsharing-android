@@ -9,7 +9,6 @@ import com.algorand.algosdk.crypto.TEALProgram;
 import com.algorand.algosdk.logic.StateSchema;
 import com.algorand.algosdk.transaction.SignedTransaction;
 import com.algorand.algosdk.transaction.Transaction;
-import com.algorand.algosdk.util.Encoder;
 import com.algorand.algosdk.v2.client.common.AlgodClient;
 import com.algorand.algosdk.v2.client.common.Response;
 import com.algorand.algosdk.v2.client.model.CompileResponse;
@@ -20,12 +19,11 @@ import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.helpers.ServicesHelper;
 import com.example.algorandcarsharing.helpers.TransactionsHelper;
 import com.example.algorandcarsharing.helpers.UtilsHelper;
-import com.example.algorandcarsharing.models.TripModel;
+import com.example.algorandcarsharing.models.TripSchema;
 import com.example.algorandcarsharing.models.CreateTripModel;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.CompletionException;
@@ -89,8 +87,8 @@ public class ApplicationService implements BaseService {
                     TEALProgram approvalProgram = getCompiledProgram(context, ProgramType.ApprovalState).get();
                     TEALProgram clearStateProgram = getCompiledProgram(context, ProgramType.ClearState).get();
 
-                    StateSchema globalState = TripModel.getGlobalStateSchema();
-                    StateSchema localState = TripModel.getLocalStateSchema();
+                    StateSchema globalState = TripSchema.getGlobalStateSchema();
+                    StateSchema localState = TripSchema.getLocalStateSchema();
 
                     List<byte[]> args = tripArgs.getArgs(client);
 
@@ -124,7 +122,7 @@ public class ApplicationService implements BaseService {
                 Address escrowAddress = getEscrowAddress(appId).get();
 
                 List<byte[]> args  = new ArrayList<>();
-                args.add(TripModel.AppMethod.InitializeEscrow.getValue().getBytes());
+                args.add(TripSchema.AppMethod.InitializeEscrow.getValue().getBytes());
                 args.add(escrowAddress.getBytes());
 
                 // link the escrow to the application

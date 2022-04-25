@@ -15,8 +15,11 @@ import com.algorand.algosdk.v2.client.model.Application;
 import com.algorand.algosdk.v2.client.model.Transaction;
 import com.example.algorandcarsharing.adapters.TripAdapter;
 import com.example.algorandcarsharing.databinding.FragmentHomeBinding;
+import com.example.algorandcarsharing.fragments.account.AccountFragment;
 import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.helpers.ServicesHelper;
+import com.example.algorandcarsharing.models.TripModel;
+import com.example.algorandcarsharing.models.TripSchema;
 import com.example.algorandcarsharing.services.IndexerService;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -24,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends AccountFragment {
 
     private FragmentHomeBinding binding;
 
@@ -32,7 +35,7 @@ public class HomeFragment extends Fragment {
     private View rootView;
 
     protected TripAdapter tripAdapter;
-    List<Application> applications;
+    List<TripModel> applications;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -53,7 +56,7 @@ public class HomeFragment extends Fragment {
                         try {
                             CompletableFuture.supplyAsync(indexerService.getTransactions())
                                     .thenAcceptAsync(result -> {
-                                        List<Application> apps = searchApplications(result.transactions);
+                                        List<TripModel> apps = searchApplications(result.transactions);
 
                                         // remove old elements
                                         int size = tripAdapter.getItemCount();
@@ -104,9 +107,9 @@ public class HomeFragment extends Fragment {
         binding = null;
     }
 
-    private List<Application> searchApplications(List<Transaction> transactions) {
+    private List<TripModel> searchApplications(List<Transaction> transactions) {
         List<CompletableFuture> futureList=new ArrayList<>();
-        List<Application> validApplications = new ArrayList<>();
+        List<TripModel> validApplications = new ArrayList<>();
         for(int i=0; i<transactions.size(); i++) {
             Transaction transaction = transactions.get(i);
             try {
@@ -114,7 +117,8 @@ public class HomeFragment extends Fragment {
                         .thenAcceptAsync(result -> {
                             if(!result.application.deleted) {
                                 if(ServicesHelper.isTrustedApplication(result.application)) {
-                                    validApplications.add(result.application);
+                                    TripModel trip = new TripModel(result.application);
+                                    validApplications.add(trip);
                                 }
                                 else {
                                     LogHelper.log("getApplication()", String.format("Application %s is not a trusted application", result.application.id), LogHelper.LogType.WARNING);
