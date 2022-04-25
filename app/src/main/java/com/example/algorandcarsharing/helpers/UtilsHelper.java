@@ -4,6 +4,7 @@ import android.content.Context;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 
 public class UtilsHelper {
 
@@ -26,6 +27,7 @@ public class UtilsHelper {
     }
 
     public static byte[] IntToBytes(Integer integer) {
-        return new byte[]{integer.byteValue()};
+        BigInteger bigInt = BigInteger.valueOf(integer);
+        return bigInt.toByteArray();
     }
 }
