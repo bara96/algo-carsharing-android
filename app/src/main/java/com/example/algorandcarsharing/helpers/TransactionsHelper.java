@@ -23,9 +23,6 @@ public class TransactionsHelper {
     public static final Long escrowMinBalance = 1000000L;
     public static final Long maxWaitingRounds = 1000L;
 
-    public TransactionsHelper() {
-    }
-
     public static SignedTransaction signTransaction(Transaction transaction, Account account) throws NoSuchAlgorithmException {
         return account.signTransaction(transaction);
     }
@@ -89,6 +86,93 @@ public class TransactionsHelper {
                 .clearStateProgram(clearStateProgram)
                 .globalStateSchema(globalStateSchema)
                 .localStateSchema(localStateSchema)
+                .args(args)
+                .build();
+    }
+
+    public static Transaction update_txn(AlgodClient client, Address sender, Long appId, TEALProgram approvalProgram, TEALProgram clearStateProgram, List<byte[]> args) throws Exception {
+        Response<TransactionParametersResponse> response = client.TransactionParams().execute();
+        ServicesHelper.checkResponse(response);
+
+        TransactionParametersResponse params = response.body();
+        if (params == null) {
+            throw new Exception("Params retrieval error");
+        }
+
+        return Transaction.ApplicationUpdateTransactionBuilder()
+                .suggestedParams(params)
+                .sender(sender)
+                .applicationId(appId)
+                .approvalProgram(approvalProgram)
+                .clearStateProgram(clearStateProgram)
+                .args(args)
+                .build();
+    }
+
+    public static Transaction delete_txn(AlgodClient client, Address sender, Long appId, List<byte[]> args) throws Exception {
+        Response<TransactionParametersResponse> response = client.TransactionParams().execute();
+        ServicesHelper.checkResponse(response);
+
+        TransactionParametersResponse params = response.body();
+        if (params == null) {
+            throw new Exception("Params retrieval error");
+        }
+
+        return Transaction.ApplicationDeleteTransactionBuilder()
+                .suggestedParams(params)
+                .sender(sender)
+                .applicationId(appId)
+                .args(args)
+                .build();
+    }
+
+    public static Transaction clear_txn(AlgodClient client, Address sender, Long appId, List<byte[]> args) throws Exception {
+        Response<TransactionParametersResponse> response = client.TransactionParams().execute();
+        ServicesHelper.checkResponse(response);
+
+        TransactionParametersResponse params = response.body();
+        if (params == null) {
+            throw new Exception("Params retrieval error");
+        }
+
+        return Transaction.ApplicationClearTransactionBuilder()
+                .suggestedParams(params)
+                .sender(sender)
+                .applicationId(appId)
+                .args(args)
+                .build();
+    }
+
+    public static Transaction close_out_txn(AlgodClient client, Address sender, Long appId, List<byte[]> args) throws Exception {
+        Response<TransactionParametersResponse> response = client.TransactionParams().execute();
+        ServicesHelper.checkResponse(response);
+
+        TransactionParametersResponse params = response.body();
+        if (params == null) {
+            throw new Exception("Params retrieval error");
+        }
+
+        return Transaction.ApplicationCloseTransactionBuilder()
+                .suggestedParams(params)
+                .sender(sender)
+                .applicationId(appId)
+                .args(args)
+                .build();
+    }
+
+    public static Transaction optin_txn(AlgodClient client, Address sender, Long appId, List<byte[]> args) throws Exception {
+        Response<TransactionParametersResponse> response = client.TransactionParams().execute();
+        ServicesHelper.checkResponse(response);
+
+        TransactionParametersResponse params = response.body();
+        if (params == null) {
+            throw new Exception("Params retrieval error");
+        }
+
+        return Transaction.ApplicationOptInTransactionBuilder()
+                .suggestedParams(params)
+                .sender(sender)
+                .applicationId(appId)
                 .args(args)
                 .build();
     }

@@ -20,7 +20,7 @@ public class TripModel implements TripSchema {
 
     public TripModel(Application application) {
         this.application = application;
-        this.globalState = readGlobalState(application);
+        readGlobalState(application);
     }
 
     /**
@@ -29,6 +29,14 @@ public class TripModel implements TripSchema {
      */
     public Long id() {
         return this.application.id;
+    }
+
+    /**
+     *
+     * @return the Application creator Address
+     */
+    public Address creator() {
+        return this.application.params.creator;
     }
 
     /**
@@ -76,7 +84,7 @@ public class TripModel implements TripSchema {
         return this.globalState.getOrDefault(key.getValue(), null);
     }
 
-    public String getLocalStateKey(GlobalState key) {
+    public String getLocalStateKey(LocalState key) {
         return this.localState.getOrDefault(key.getValue(), null);
     }
 
@@ -100,28 +108,22 @@ public class TripModel implements TripSchema {
      * Read the LocalState StateSchema of the application
      *
      * @param application
-     * @return an hashmap with the key, value of the StateSchema
      */
-    public static HashMap<String, String> readLocalState(ApplicationLocalState application) {
+    public void readLocalState(ApplicationLocalState application) {
         if(application != null) {
-            return readState(application.keyValue);
+            this.localState = readState(application.keyValue);
         }
-        else
-            return new HashMap<>();
     }
 
     /**
      * Read the GlobalState StateSchema of the application
      *
      * @param application
-     * @return an hashmap with the key, value of the StateSchema
      */
-    public static HashMap<String, String> readGlobalState(Application application) {
+    public void readGlobalState(Application application) {
         if(application.params != null && application.params.globalState != null) {
-            return readState(application.params.globalState);
+            this.globalState = readState(application.params.globalState);
         }
-        else
-            return new HashMap<>();
     }
 
     /**

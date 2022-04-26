@@ -3,11 +3,12 @@ package com.example.algorandcarsharing.activities;
 import android.os.Bundle;
 import android.view.View;
 
+import com.algorand.algosdk.v2.client.model.ApplicationLocalState;
 import com.example.algorandcarsharing.R;
 import com.example.algorandcarsharing.constants.SharedPreferencesConstants;
 import com.example.algorandcarsharing.databinding.ActivityTripBinding;
 import com.example.algorandcarsharing.helpers.LogHelper;
-import com.example.algorandcarsharing.models.CreateTripModel;
+import com.example.algorandcarsharing.models.InsertTripModel;
 import com.example.algorandcarsharing.models.TripModel;
 import com.example.algorandcarsharing.models.TripSchema;
 import com.example.algorandcarsharing.pickers.DateSetter;
@@ -20,6 +21,8 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class TripActivity extends AccountBasedActivity {
@@ -27,8 +30,17 @@ public class TripActivity extends AccountBasedActivity {
     private TripModel application = null;
     private ActivityTripBinding binding;
     private View rootView;
+    private Long appId = null;
+    private TripViewMode currentMode = TripViewMode.Create;
 
     private ApplicationService applicationService;
+
+    private enum TripViewMode {
+        Create,
+        Update,
+        Join,
+        Leave,
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,8 +60,10 @@ public class TripActivity extends AccountBasedActivity {
 
         binding.saveDummyBt.setOnClickListener(v -> {
             try {
-                CreateTripModel tripData = CreateTripModel.DummyTrip();
-                createTrip(tripData);
+                if(currentMode == TripViewMode.Create) {
+                    InsertTripModel tripData = InsertTripModel.DummyTrip();
+                    createTrip(tripData);
+                }
             }
             catch (Exception e) {
                 LogHelper.error("Error saving trip", e);
@@ -60,9 +74,12 @@ public class TripActivity extends AccountBasedActivity {
 
         binding.saveBt.setOnClickListener(v -> {
             try {
-                CreateTripModel tripData = validate();
+                InsertTripModel tripData = validate();
                 if(tripData != null) {
-                    createTrip(tripData);
+                    switch (currentMode) {
+                        case Create: createTrip(tripData); break;
+                        case Update: createTrip(tripData); break;
+                    }
                 }
             }
             catch (Exception e) {
@@ -71,17 +88,21 @@ public class TripActivity extends AccountBasedActivity {
             }
         });
 
-        Long appId = null;
         if (savedInstanceState == null) {
             Bundle extras = getIntent().getExtras();
             if(extras != null) {
                 appId = extras.getLong(SharedPreferencesConstants.IntentExtra.AppId.getKey());
-                loadApplication(appId);
             }
         } else {
             appId = (Long) savedInstanceState.getSerializable(SharedPreferencesConstants.IntentExtra.AppId.getKey());
-            loadApplication(appId);
         }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        loadApplication(appId);
     }
 
     @Override
@@ -97,8 +118,9 @@ public class TripActivity extends AccountBasedActivity {
     }
 
     private void loadApplication(Long appId) {
+        setTitle(String.format("Trip %s", appId));
         setLoading(true);
-        if(appId != null) {
+        if(appId != null && account.getAddress() != null) {
             try {
                 IndexerService indexerService = new IndexerService();
                 CompletableFuture.supplyAsync(indexerService.getApplication(appId))
@@ -109,6 +131,28 @@ public class TripActivity extends AccountBasedActivity {
                                     application = trip;
                                     runOnUiThread(() -> {
                                         setTripOnView(application);
+                                        if(trip.creator().toString().equals(account.getAddress())) {
+                                            setTripViewMode(TripViewMode.Update);
+                                        }
+                                        else {
+                                            TripViewMode mode = TripViewMode.Join;
+
+                                            List<ApplicationLocalState> appsLocalState = this.account.getAccountInfo().appsLocalState;
+                                            for(int i=0; i < appsLocalState.size(); i++) {
+                                                // search if user has optin into this app
+                                                ApplicationLocalState localState = appsLocalState.get(i);
+                                                if(localState.id.equals(trip.id())) {
+                                                    // if user has optin, check if is participating
+                                                    trip.readLocalState(localState);
+                                                    String isParticipating = trip.getLocalStateKey(TripSchema.LocalState.IsParticipating);
+                                                    System.out.println(isParticipating);
+                                                    if(isParticipating.equals("1")) {
+                                                        mode = TripViewMode.Leave;
+                                                    }
+                                                }
+                                            }
+                                            setTripViewMode(mode);
+                                        }
                                     });
                                 } else {
                                     LogHelper.log("loadApplication()", String.format("Application %s is not a trusted application", result.application.id), LogHelper.LogType.WARNING);
@@ -128,9 +172,13 @@ public class TripActivity extends AccountBasedActivity {
                 LogHelper.error("loadApplication()", e, false);
             }
         }
+        else {
+            setLoading(false);
+            Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
+        }
     }
 
-    private void createTrip(CreateTripModel tripData) {
+    private void createTrip(InsertTripModel tripData) {
         setLoading(true);
         if(tripData != null && account.getAddress() != null) {
             try {
@@ -162,7 +210,7 @@ public class TripActivity extends AccountBasedActivity {
         }
     }
 
-    private CreateTripModel validate() throws ParseException {
+    private InsertTripModel validate() throws ParseException {
             String creatorName = String.valueOf(binding.creatorName.getText()).trim();
             String startAddress = String.valueOf(binding.startAddress.getText()).trim();
             String endAddress = String.valueOf(binding.endAddress.getText()).trim();
@@ -217,15 +265,15 @@ public class TripActivity extends AccountBasedActivity {
                 return null;
             }
 
-            return new CreateTripModel(creatorName, startAddress, endAddress, startDatetime, endDatetime, cost, availableSeats);
+            return new InsertTripModel(creatorName, startAddress, endAddress, startDatetime, endDatetime, cost, availableSeats);
     }
 
     private void setTripOnView(TripModel trip) {
         try {
             String startDateTime = trip.getGlobalStateKey(TripSchema.GlobalState.DepartureDate);
             String endDateTime = trip.getGlobalStateKey(TripSchema.GlobalState.ArrivalDate);
-            DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            DateFormat timeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+            DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+            DateFormat timeFormat = new SimpleDateFormat("HH:mm");
             Date startDatetime = new SimpleDateFormat("yyyy/MM/dd HH:mm").parse(startDateTime);
             Date endDatetime = new SimpleDateFormat("yyyy/MM/dd HH:mm").parse(endDateTime);
 
@@ -250,27 +298,55 @@ public class TripActivity extends AccountBasedActivity {
         }
     }
 
-    private void setTripViewEditing(boolean enabled) {
-        binding.creatorName.setEnabled(enabled);
-        binding.startAddress.setEnabled(enabled);
-        binding.endAddress.setEnabled(enabled);
-        binding.startDate.setEnabled(enabled);
-        binding.startTime.setEnabled(enabled);
-        binding.endDate.setEnabled(enabled);
-        binding.endTime.setEnabled(enabled);
-        binding.cost.setEnabled(enabled);
-        binding.availableSeats.setEnabled(enabled);
+    private void setTripViewMode(TripViewMode viewMode) {
+        boolean editEnabled = false;
+        switch (viewMode) {
+            case Join:
+                binding.saveBt.setText(getString(R.string.join));
+                binding.saveDummyBt.setEnabled(false);
+                binding.saveDummyBt.setVisibility(View.GONE);
+                editEnabled = false;
+                break;
+            case Leave:
+                binding.saveBt.setText(getString(R.string.leave));
+                binding.saveDummyBt.setEnabled(false);
+                binding.saveDummyBt.setVisibility(View.GONE);
+                editEnabled = false;
+                break;
+            case Create:
+                binding.saveBt.setText(getString(R.string.create));
+                binding.saveDummyBt.setEnabled(true);
+                binding.saveDummyBt.setVisibility(View.VISIBLE);
+                editEnabled = true;
+                break;
+            case Update:
+                binding.saveBt.setText(getString(R.string.update));
+                binding.saveDummyBt.setEnabled(false);
+                binding.saveDummyBt.setVisibility(View.GONE);
+                editEnabled = true;
+                break;
+        }
+
+        binding.creatorName.setEnabled(editEnabled);
+        binding.startAddress.setEnabled(editEnabled);
+        binding.endAddress.setEnabled(editEnabled);
+        binding.startDate.setEnabled(editEnabled);
+        binding.startTime.setEnabled(editEnabled);
+        binding.endDate.setEnabled(editEnabled);
+        binding.endTime.setEnabled(editEnabled);
+        binding.cost.setEnabled(editEnabled);
+        binding.availableSeats.setEnabled(editEnabled);
+
+        currentMode = viewMode;
     }
 
     private void setLoading(boolean isLoading) {
         if(isLoading) {
-            this.setTripViewEditing(false);
             binding.progressBar.setVisibility(View.VISIBLE);
             binding.saveBt.setEnabled(false);
             binding.saveDummyBt.setEnabled(false);
         }
         else {
-            this.setTripViewEditing(true);
             binding.progressBar.setVisibility(View.GONE);
             binding.saveBt.setEnabled(true);
             binding.saveDummyBt.setEnabled(true);

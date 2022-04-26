@@ -19,7 +19,7 @@ import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.helpers.ServicesHelper;
 import com.example.algorandcarsharing.helpers.TransactionsHelper;
 import com.example.algorandcarsharing.helpers.UtilsHelper;
-import com.example.algorandcarsharing.models.CreateTripModel;
+import com.example.algorandcarsharing.models.InsertTripModel;
 import com.example.algorandcarsharing.models.TripSchema;
 
 import java.nio.charset.StandardCharsets;
@@ -81,7 +81,7 @@ public class ApplicationService implements BaseService {
      * @param tripArgs
      * @return
      */
-    public Supplier<Long> createApplication(Context context, Account sender, CreateTripModel tripArgs) {
+    public Supplier<Long> createApplication(Context context, Account sender, InsertTripModel tripArgs) {
         return () -> {
                 try {
                     TEALProgram approvalProgram = getCompiledProgram(context, ProgramType.ApprovalState).get();

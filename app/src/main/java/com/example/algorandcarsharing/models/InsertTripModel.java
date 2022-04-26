@@ -18,7 +18,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class CreateTripModel implements TripSchema {
+public class InsertTripModel implements TripSchema {
 
     protected String creatorName;
     protected String startAddress;
@@ -28,7 +28,7 @@ public class CreateTripModel implements TripSchema {
     protected Integer tripCost;
     protected Integer availableSeats;
 
-    public CreateTripModel(String creatorName, String startAddress, String endAddress, Date tripStartDate, Date tripEndDate, Integer tripCost, Integer availableSeats) {
+    public InsertTripModel(String creatorName, String startAddress, String endAddress, Date tripStartDate, Date tripEndDate, Integer tripCost, Integer availableSeats) {
         this.creatorName = creatorName;
         this.startAddress = startAddress;
         this.endAddress = endAddress;
@@ -104,7 +104,7 @@ public class CreateTripModel implements TripSchema {
         };
     }
 
-    public static CreateTripModel DummyTrip() throws ParseException {
+    public static InsertTripModel DummyTrip() throws ParseException {
         String creatorName = "Matteo Baratella";
         String startAddress = "Mestre";
         String endAddress = "Milano";
@@ -116,6 +116,6 @@ public class CreateTripModel implements TripSchema {
         Date dateStart = new SimpleDateFormat("yyyy/MM/dd HH:mm").parse(startDate);
         Date dateEnd = new SimpleDateFormat("yyyy/MM/dd HH:mm").parse(endDate);
 
-        return new CreateTripModel(creatorName, startAddress, endAddress, dateStart, dateEnd, cost, availableSeats);
+        return new InsertTripModel(creatorName, startAddress, endAddress, dateStart, dateEnd, cost, availableSeats);
     }
 }

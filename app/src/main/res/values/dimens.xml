@@ -6,5 +6,11 @@
     <dimen name="nav_header_height">176dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="list_item_height">20dp</dimen>
-    <dimen name="margin_medium">24dp</dimen>
+    <dimen name="text_small">14sp</dimen>
+    <dimen name="text_medium">16sp</dimen>
+    <dimen name="text_large">18sp</dimen>
+    <dimen name="margin">20dp</dimen>
+    <dimen name="margin_xsm">16dp</dimen>
+    <dimen name="margin_sm">18dp</dimen>
+    <dimen name="margin_md">24dp</dimen>
 </resources>

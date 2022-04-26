@@ -48,7 +48,7 @@ public class TripsFragment extends AccountBasedFragment {
                 () -> {
                     if(account.getAddress() != null) {
                         try {
-                            CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
+                            CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress().toString()))
                                     .thenAcceptAsync(result -> {
                                         List<TripModel> apps = searchApplications(result.createdApps);
 

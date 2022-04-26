@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">Algorand Carpooling</string>
+    <string name="activity_trip">Trip</string>
     <string name="activity_create_trip">Create Trip</string>
+    <string name="activity_update_trip">Update Trip</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Algorand Carpooling</string>
@@ -16,8 +18,11 @@
     <string name="total_balance">Total Balance</string>
     <string name="account_mnemonic">Account Mnemonic</string>
     <string name="account_address">Account Address</string>
+    <string name="create">Create</string>
     <string name="save">Save</string>
-    <string name="update">Save</string>
+    <string name="update">Update</string>
+    <string name="join">Join Trip</string>
+    <string name="leave">Leave Trip</string>
 
     <string name="title_activity_settings">SettingsActivity</string>
 
@@ -36,29 +41,34 @@
     </string>
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
 
-    <string name="availables_trips">Availables Trips</string>
-    <string name="trip_title">Title</string>
     <string name="menu_trips_create">Create Trip</string>
     <string name="insert_trip_data">Insert Trip Data</string>
-    <string name="creator_name">Creator Name</string>
-    <string name="start_address">Departure Address</string>
-    <string name="end_address">Arrival Address</string>
-    <string name="end_date">Arrival Date</string>
-    <string name="end_date2">Arrival Date:</string>
-    <string name="start_date">Departure Date</string>
-    <string name="start_date2">Departure Date:</string>
-    <string name="trip_cost">Trip Cost (unitary)</string>
-    <string name="available_seats">Available Seats</string>
-    <string name="create">Create</string>
+    <string name="availables_trips">Availables Trips</string>
+    <string name="your_trips">Your Trips</string>
     <string name="create_dummy_trip">Create dummy trip</string>
-    <string name="end_time">Arrival Time</string>
-    <string name="start_time">Departure Time</string>
-    <string name="your_trips">Your trips</string>
-    <string name="address">Address</string>
+
+    <!-- Trip View Strings -->
     <string name="trip">Trip:</string>
+    <string name="trip_title">Title</string>
+    <string name="creator_name">Insert a Name</string>
+    <string name="creator_name_label">Creator Name:</string>
+    <string name="address">Address</string>
+    <string name="start_address">Insert an Address</string>
+    <string name="start_address_label">Departure Address:</string>
+    <string name="end_address">Insert an Address</string>
+    <string name="end_address_label">Arrival Address:</string>
+    <string name="date">yyyy/mm/dd</string>
+    <string name="start_date_label">Departure Date:</string>
+    <string name="time">hh:mm</string>
+    <string name="start_time_label">Departure Time:</string>
+    <string name="end_date_label">Arrival Date:</string>
+    <string name="end_time_label">Arrival Time:</string>
+    <string name="trip_cost_label">Trip Cost (unitary):</string>
+    <string name="trip_cost">0 MicroAlgo</string>
+    <string name="available_seats">0 Seats</string>
+    <string name="available_seats_label">Available Seats:</string>
+    <string name="availability_label">Availability:</string>
+
+
     <string name="date_example">2022/05/10 15:00</string>
-    <string name="cost">Cost:</string>
-    <string name="cost_example">5000</string>
-    <string name="availability_example">3</string>
-    <string name="availability">Availability:</string>
 </resources>

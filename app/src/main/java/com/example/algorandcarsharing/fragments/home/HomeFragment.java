@@ -63,7 +63,7 @@ public class HomeFragment extends AccountBasedFragment {
                                         applications.addAll(apps);
                                         requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeInserted(0, applications.size()));
 
-                                        LogHelper.log("Valid Apps", apps.toString());
+                                        LogHelper.log("N° Valid Apps", String.valueOf(apps.size()));
                                         LogHelper.log("getTransactions", result.toString());
                                         Snackbar.make(rootView, "Refreshed", Snackbar.LENGTH_LONG).show();
                                     })

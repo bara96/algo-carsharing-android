@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.algorandcarsharing.R;
 import com.example.algorandcarsharing.activities.SettingsActivity;
+import com.example.algorandcarsharing.activities.TripActivity;
 import com.example.algorandcarsharing.constants.SharedPreferencesConstants;
 import com.example.algorandcarsharing.models.TripModel;
 import com.example.algorandcarsharing.models.TripSchema;
@@ -87,8 +88,8 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.ViewHolder> {
 
         viewHolder.itemView.setOnClickListener(view -> {
             Context context = view.getContext();
-            Intent intent = new Intent(context, SettingsActivity.class);
-            intent.putExtra(id, SharedPreferencesConstants.IntentExtra.AppId.getKey());
+            Intent intent = new Intent(context, TripActivity.class);
+            intent.putExtra(SharedPreferencesConstants.IntentExtra.AppId.getKey(), localDataSet.get(position).id());
             context.startActivity(intent);
         });
     }
