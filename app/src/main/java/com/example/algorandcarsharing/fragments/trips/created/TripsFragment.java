@@ -25,9 +25,7 @@ import java.util.concurrent.CompletableFuture;
 public class TripsFragment extends AccountBasedFragment {
 
     private FragmentTripsCreatedBinding binding;
-
     private View rootView;
-
     protected TripAdapter tripAdapter;
     List<TripModel> applications = new ArrayList<>();
 
@@ -46,40 +44,43 @@ public class TripsFragment extends AccountBasedFragment {
 
         binding.swipe.setOnRefreshListener(
                 () -> {
-                    if(account.getAddress() != null) {
-                        try {
-                            CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress().toString()))
-                                    .thenAcceptAsync(result -> {
-                                        List<TripModel> apps = searchApplications(result.createdApps);
+                    if(account.getAddress() == null) {
+                        binding.swipe.setRefreshing(false);
+                        Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
+                        return;
+                    }
+                    try {
+                        CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
+                                .thenAcceptAsync(result -> {
+                                    List<TripModel> apps = searchApplications(result.createdApps);
 
-                                        // remove old elements
-                                        int size = tripAdapter.getItemCount();
-                                        applications.clear();
-                                        requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeRemoved(0, size));
+                                    // remove old elements
+                                    int size = tripAdapter.getItemCount();
+                                    applications.clear();
+                                    requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeRemoved(0, size));
 
-                                        // add new elements
-                                        applications.addAll(apps);
-                                        requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeInserted(0, applications.size()));
+                                    // add new elements
+                                    applications.addAll(apps);
+                                    requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeInserted(0, applications.size()));
 
-                                        LogHelper.log("getCreatedApplications", result.toString());
-                                        Snackbar.make(rootView, "Refreshed", Snackbar.LENGTH_LONG).show();
-                                    })
-                                    .exceptionally(e->{
-                                        account.setAccountInfo(null);
-                                        LogHelper.error("getCreatedApplications", e);
-                                        Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
-                                        return null;
-                                    })
-                                    .handle( (ok, ex) -> {
-                                        binding.swipe.setRefreshing(false);
-                                        return ok;
-                                    });
-                        }
-                        catch (Exception e) {
-                            binding.swipe.setRefreshing(false);
-                            LogHelper.error("getCreatedApplications", e);
-                            Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
-                        }
+                                    LogHelper.log("getCreatedApplications", result.toString());
+                                    Snackbar.make(rootView, "Refreshed", Snackbar.LENGTH_LONG).show();
+                                })
+                                .exceptionally(e->{
+                                    account.setAccountInfo(null);
+                                    LogHelper.error("getCreatedApplications", e);
+                                    Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+                                    return null;
+                                })
+                                .handle( (ok, ex) -> {
+                                    binding.swipe.setRefreshing(false);
+                                    return ok;
+                                });
+                    }
+                    catch (Exception e) {
+                        binding.swipe.setRefreshing(false);
+                        LogHelper.error("getCreatedApplications", e);
+                        Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
                     }
                 });
 

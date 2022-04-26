@@ -8,6 +8,7 @@ import com.algorand.algosdk.v2.client.model.TealKeyValue;
 import com.example.algorandcarsharing.constants.ApplicationConstants;
 import com.example.algorandcarsharing.constants.Constants;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +38,14 @@ public class TripModel implements TripSchema {
      */
     public Address creator() {
         return this.application.params.creator;
+    }
+
+    /**
+     *
+     * @return the Application creator Address
+     */
+    public Address escrowAddress() throws NoSuchAlgorithmException {
+        return new Address(this.getGlobalStateKey(GlobalState.EscrowAddress));
     }
 
     /**

@@ -15,6 +15,7 @@ import com.algorand.algosdk.v2.client.model.PostTransactionsResponse;
 import com.algorand.algosdk.v2.client.model.TransactionParametersResponse;
 import com.example.algorandcarsharing.constants.ApplicationConstants;
 
+import java.io.ByteArrayOutputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
@@ -23,8 +24,21 @@ public class TransactionsHelper {
     public static final Long escrowMinBalance = 1000000L;
     public static final Long maxWaitingRounds = 1000L;
 
-    public static SignedTransaction signTransaction(Transaction transaction, Account account) throws NoSuchAlgorithmException {
-        return account.signTransaction(transaction);
+    public static String sendTransaction(AlgodClient client, List<SignedTransaction> txns) throws Exception {
+        // put all the transactions in a byte array
+        ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream( );
+        for (int i=0; i < txns.size(); i++) {
+            byte[] encodedTxBytes = Encoder.encodeToMsgPack(txns.get(i));
+            byteOutputStream.write(encodedTxBytes);
+        }
+        // Submit the transaction to the network
+        byte[] groupTransactionBytes = byteOutputStream.toByteArray();
+        Response<PostTransactionsResponse> response = client.RawTransaction().rawtxn(groupTransactionBytes).execute();
+        ServicesHelper.checkResponse(response);
+
+        String txID = response.body().txId;
+        LogHelper.log(TransactionsHelper.class.getName(), "Sent transaction with ID: " + txID);
+        return txID;
     }
 
     public static String sendTransaction(AlgodClient client, SignedTransaction txn) throws Exception {

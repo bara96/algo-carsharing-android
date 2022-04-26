@@ -49,7 +49,7 @@ public class AccountFragment extends AccountBasedFragment {
                 }
             }
         });
-        binding.saveBt.setOnClickListener(v -> {
+        binding.sendBt.setOnClickListener(v -> {
             try {
                 String mnemonic = String.valueOf(binding.mnemonic.getText());
                 account.setMnemonic(mnemonic);
@@ -65,35 +65,32 @@ public class AccountFragment extends AccountBasedFragment {
 
         binding.swipe.setOnRefreshListener(
                 () -> {
-                    if(account.getAddress() != null) {
-                        try {
-                            CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
-                                    .thenAcceptAsync(result -> {
-                                        account.setAccountInfo(result);
-                                        LogHelper.log("getAccountInfo()", result.toString());
-                                        Snackbar.make(rootView, "Account Refreshed", Snackbar.LENGTH_LONG).show();
-                                    })
-                                    .exceptionally(e->{
-                                        account.setAccountInfo(null);
-                                        LogHelper.error("getAccountInfo()", e);
-                                        Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
-                                        return null;
-                                    })
-                                    .handle( (ok, ex) -> {
-                                        requireActivity().runOnUiThread(() -> binding.balance.setText(String.valueOf(account.getBalance())));
-                                        binding.swipe.setRefreshing(false);
-                                        return ok;
-                                    });
-                        }
-                        catch (Exception e) {
-                            binding.swipe.setRefreshing(false);
-                            LogHelper.error("getAccountInfo()", e);
-                            Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
-                        }
-                    }
-                    else {
+                    if(account.getAddress() == null) {
                         binding.swipe.setRefreshing(false);
                         Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
+                        return;
+                    }
+                    try {
+                        CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
+                                .thenAcceptAsync(result -> {
+                                    requireActivity().runOnUiThread(() -> binding.balance.setText(String.valueOf(result.amount)));
+                                    LogHelper.log("getAccountInfo()", result.toString());
+                                    Snackbar.make(rootView, "Account Refreshed", Snackbar.LENGTH_LONG).show();
+                                })
+                                .exceptionally(e->{
+                                    LogHelper.error("getAccountInfo()", e);
+                                    Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+                                    return null;
+                                })
+                                .handle( (ok, ex) -> {
+                                    binding.swipe.setRefreshing(false);
+                                    return ok;
+                                });
+                    }
+                    catch (Exception e) {
+                        binding.swipe.setRefreshing(false);
+                        LogHelper.error("getAccountInfo()", e);
+                        Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
                     }
                 });
 

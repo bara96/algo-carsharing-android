@@ -32,7 +32,7 @@ public abstract class AccountBasedActivity extends AppCompatActivity {
         try {
             account.loadFromStorage(this);
 
-            if(account.getMnemonic() == null && rootView != null) {
+            if(account.getAddress() == null && rootView != null) {
                 Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
             }
         }

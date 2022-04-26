@@ -21,8 +21,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class TripActivity extends AccountBasedActivity {
@@ -72,14 +70,24 @@ public class TripActivity extends AccountBasedActivity {
 
         });
 
-        binding.saveBt.setOnClickListener(v -> {
+        binding.sendBt.setOnClickListener(v -> {
             try {
-                InsertTripModel tripData = validate();
-                if(tripData != null) {
-                    switch (currentMode) {
-                        case Create: createTrip(tripData); break;
-                        case Update: createTrip(tripData); break;
-                    }
+                InsertTripModel tripData = null;
+                switch (currentMode) {
+                    case Create:
+                        tripData = validate();
+                        createTrip(tripData);
+                        break;
+                    case Update:
+                        tripData = validate();
+                        //createTrip(tripData);
+                        break;
+                    case Join:
+                        joinTrip(application);
+                        break;
+                    case Leave:
+                        leaveTrip(application);
+                        break;
                 }
             }
             catch (Exception e) {
@@ -106,6 +114,13 @@ public class TripActivity extends AccountBasedActivity {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+
+        loadApplication(appId);
+    }
+
+    @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();
         return super.onSupportNavigateUp();
@@ -118,95 +133,165 @@ public class TripActivity extends AccountBasedActivity {
     }
 
     private void loadApplication(Long appId) {
-        setTitle(String.format("Trip %s", appId));
         setLoading(true);
-        if(appId != null && account.getAddress() != null) {
-            try {
-                IndexerService indexerService = new IndexerService();
-                CompletableFuture.supplyAsync(indexerService.getApplication(appId))
-                        .thenAcceptAsync(result -> {
-                            if (!result.application.deleted) {
-                                TripModel trip = new TripModel(result.application);
-                                if (trip.isValid()) {
-                                    application = trip;
-                                    runOnUiThread(() -> {
-                                        setTripOnView(application);
-                                        if(trip.creator().toString().equals(account.getAddress())) {
-                                            setTripViewMode(TripViewMode.Update);
-                                        }
-                                        else {
-                                            TripViewMode mode = TripViewMode.Join;
-
-                                            List<ApplicationLocalState> appsLocalState = this.account.getAccountInfo().appsLocalState;
-                                            for(int i=0; i < appsLocalState.size(); i++) {
-                                                // search if user has optin into this app
-                                                ApplicationLocalState localState = appsLocalState.get(i);
-                                                if(localState.id.equals(trip.id())) {
-                                                    // if user has optin, check if is participating
-                                                    trip.readLocalState(localState);
-                                                    String isParticipating = trip.getLocalStateKey(TripSchema.LocalState.IsParticipating);
-                                                    System.out.println(isParticipating);
-                                                    if(isParticipating.equals("1")) {
-                                                        mode = TripViewMode.Leave;
-                                                    }
-                                                }
-                                            }
-                                            setTripViewMode(mode);
-                                        }
-                                    });
-                                } else {
-                                    LogHelper.log("loadApplication()", String.format("Application %s is not a trusted application", result.application.id), LogHelper.LogType.WARNING);
-                                }
-                            }
-                        })
-                        .exceptionally(e -> {
-                            LogHelper.error("loadApplication()", e, false);
-                            return null;
-                        })
-                        .handle((ok, ex) -> {
-                            runOnUiThread(() -> setLoading(false));
-                            return ok;
-                        });
-            } catch (Exception e) {
-                setLoading(false);
-                LogHelper.error("loadApplication()", e, false);
-            }
-        }
-        else {
+        if(this.account.getAddress() == null) {
             setLoading(false);
             Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+        if(appId == null) {
+            setLoading(false);
+            Snackbar.make(rootView, "Invalid app id", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+        try {
+            setTitle(String.format("Trip %s", appId));
+            IndexerService indexerService = new IndexerService();
+            CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
+                    .thenAcceptAsync(result -> {
+                        this.account.setAccountInfo(result);
+                    })
+                    .thenComposeAsync(result -> CompletableFuture.supplyAsync(indexerService.getApplication(appId)))
+                    .thenAcceptAsync(result -> {
+                        if (!result.application.deleted) {
+                            TripModel trip = new TripModel(result.application);
+                            if (trip.isValid()) {
+                                application = trip;
+
+                                // check if the account is the creator
+                                if(trip.creator().toString().equals(account.getAddress())) {
+                                    currentMode = TripViewMode.Update;
+                                }
+                                else {
+                                    // check if the account can participate or leave
+                                    currentMode = TripViewMode.Join;
+
+                                    ApplicationLocalState localState = this.account.getAppLocalState(trip.id());
+                                    if(localState != null) {
+                                        // if user has opt-in, check if is participating
+                                        trip.readLocalState(localState);
+                                        String isParticipating = trip.getLocalStateKey(TripSchema.LocalState.IsParticipating);
+                                        if(isParticipating.equals("1")) {
+                                            currentMode = TripViewMode.Leave;
+                                        }
+                                    }
+                                }
+                                runOnUiThread(() -> {
+                                    setTripOnView(application);
+                                    setTripViewMode(currentMode);
+                                });
+                            } else {
+                                LogHelper.log("loadApplication()", String.format("Application %s is not a trusted application", result.application.id), LogHelper.LogType.WARNING);
+                            }
+                        }
+                    })
+                    .exceptionally(e -> {
+                        LogHelper.error("loadApplication()", e, false);
+                        return null;
+                    })
+                    .handle((ok, ex) -> {
+                        runOnUiThread(() -> setLoading(false));
+                        return ok;
+                    });
+        } catch (Exception e) {
+            setLoading(false);
+            LogHelper.error("loadApplication()", e, false);
         }
     }
 
     private void createTrip(InsertTripModel tripData) {
         setLoading(true);
-        if(tripData != null && account.getAddress() != null) {
-            try {
-                CompletableFuture.supplyAsync(applicationService.createApplication(getApplicationContext(), account.getAccount(), tripData))
-                        .thenComposeAsync(result -> CompletableFuture.supplyAsync(applicationService.initializeEscrow(result, account.getAccount())))
-                        .thenAcceptAsync(result -> {
-                            Snackbar.make(rootView, String.format("Trip created with id: %s", result), Snackbar.LENGTH_LONG).show();
-                        })
-                        .exceptionally(e -> {
-                            LogHelper.error("CreateTrip", e);
-                            account.setAccountInfo(null);
-                            Snackbar.make(rootView, String.format("Error during creation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
-                            return null;
-                        })
-                        .handle((ok, ex) -> {
-                            runOnUiThread(() -> setLoading(false));
-                            return ok;
-                        });
-            }
-            catch (Exception e) {
-                setLoading(false);
-                LogHelper.error("CreateTrip", e);
-                Snackbar.make(rootView, String.format("Error during creation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
-            }
-        }
-        else {
+        if(account.getAddress() == null) {
             setLoading(false);
             Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+        if(tripData == null) {
+            setLoading(false);
+            Snackbar.make(rootView, "Empty trip data", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+        try {
+            CompletableFuture.supplyAsync(applicationService.createApplication(getApplicationContext(), account.getAccount(), tripData))
+                    .thenComposeAsync(result -> CompletableFuture.supplyAsync(applicationService.initializeEscrow(result, account.getAccount())))
+                    .thenAcceptAsync(result -> {
+                        Snackbar.make(rootView, String.format("Trip created with id: %s", result), Snackbar.LENGTH_LONG).show();
+                    })
+                    .exceptionally(e -> {
+                        LogHelper.error("CreateTrip", e);
+                        account.setAccountInfo(null);
+                        Snackbar.make(rootView, String.format("Error during creation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+                        return null;
+                    })
+                    .handle((ok, ex) -> {
+                        runOnUiThread(() -> setLoading(false));
+                        return ok;
+                    });
+        }
+        catch (Exception e) {
+            setLoading(false);
+            LogHelper.error("CreateTrip", e);
+            Snackbar.make(rootView, String.format("Error during creation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+        }
+    }
+
+    private void joinTrip(TripModel trip) {
+        setLoading(true);
+        if(account.getAddress() == null) {
+            setLoading(false);
+            Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+        try {
+            CompletableFuture.supplyAsync(applicationService.participate(trip, account))
+                    .thenAcceptAsync(result -> {
+                        Snackbar.make(rootView, String.format("Joined trip with id: %s", result), Snackbar.LENGTH_LONG).show();
+                    })
+                    .exceptionally(e -> {
+                        LogHelper.error("JoinTrip", e);
+                        Snackbar.make(rootView, String.format("Error during participation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+                        return null;
+                    })
+                    .handle((ok, ex) -> {
+                        loadApplication(appId);
+                        runOnUiThread(() -> setLoading(false));
+                        return ok;
+                    });
+        }
+        catch (Exception e) {
+            setLoading(false);
+            LogHelper.error("JoinTrip", e);
+            Snackbar.make(rootView, String.format("Error during participation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+        }
+    }
+
+    private void leaveTrip(TripModel trip) {
+        setLoading(true);
+        if(account.getAddress() == null) {
+            setLoading(false);
+            Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+        try {
+            CompletableFuture.supplyAsync(applicationService.cancelParticipation(trip, account))
+                    .thenAcceptAsync(result -> {
+                        Snackbar.make(rootView, String.format("Left trip with id: %s", result), Snackbar.LENGTH_LONG).show();
+                    })
+                    .exceptionally(e -> {
+                        LogHelper.error("LeaveTrip", e);
+                        Snackbar.make(rootView, String.format("Error during participation cancellation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+                        return null;
+                    })
+                    .handle((ok, ex) -> {
+                        loadApplication(appId);
+                        runOnUiThread(() -> setLoading(false));
+                        return ok;
+                    });
+        }
+        catch (Exception e) {
+            setLoading(false);
+            LogHelper.error("LeaveTrip", e);
+            Snackbar.make(rootView, String.format("Error during participation cancellation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
         }
     }
 
@@ -277,7 +362,7 @@ public class TripActivity extends AccountBasedActivity {
             Date startDatetime = new SimpleDateFormat("yyyy/MM/dd HH:mm").parse(startDateTime);
             Date endDatetime = new SimpleDateFormat("yyyy/MM/dd HH:mm").parse(endDateTime);
 
-            binding.saveBt.setText(getString(R.string.update));
+            binding.sendBt.setText(getString(R.string.update));
             binding.creatorName.setText(trip.getGlobalStateKey(TripSchema.GlobalState.CreatorName));
             binding.startAddress.setText(trip.getGlobalStateKey(TripSchema.GlobalState.DepartureAddress));
             binding.endAddress.setText(trip.getGlobalStateKey(TripSchema.GlobalState.ArrivalAddress));
@@ -302,25 +387,25 @@ public class TripActivity extends AccountBasedActivity {
         boolean editEnabled = false;
         switch (viewMode) {
             case Join:
-                binding.saveBt.setText(getString(R.string.join));
+                binding.sendBt.setText(getString(R.string.join));
                 binding.saveDummyBt.setEnabled(false);
                 binding.saveDummyBt.setVisibility(View.GONE);
                 editEnabled = false;
                 break;
             case Leave:
-                binding.saveBt.setText(getString(R.string.leave));
+                binding.sendBt.setText(getString(R.string.leave));
                 binding.saveDummyBt.setEnabled(false);
                 binding.saveDummyBt.setVisibility(View.GONE);
                 editEnabled = false;
                 break;
             case Create:
-                binding.saveBt.setText(getString(R.string.create));
+                binding.sendBt.setText(getString(R.string.create));
                 binding.saveDummyBt.setEnabled(true);
                 binding.saveDummyBt.setVisibility(View.VISIBLE);
                 editEnabled = true;
                 break;
             case Update:
-                binding.saveBt.setText(getString(R.string.update));
+                binding.sendBt.setText(getString(R.string.update));
                 binding.saveDummyBt.setEnabled(false);
                 binding.saveDummyBt.setVisibility(View.GONE);
                 editEnabled = true;
@@ -336,19 +421,17 @@ public class TripActivity extends AccountBasedActivity {
         binding.endTime.setEnabled(editEnabled);
         binding.cost.setEnabled(editEnabled);
         binding.availableSeats.setEnabled(editEnabled);
-
-        currentMode = viewMode;
     }
 
     private void setLoading(boolean isLoading) {
         if(isLoading) {
             binding.progressBar.setVisibility(View.VISIBLE);
-            binding.saveBt.setEnabled(false);
+            binding.sendBt.setEnabled(false);
             binding.saveDummyBt.setEnabled(false);
         }
         else {
             binding.progressBar.setVisibility(View.GONE);
-            binding.saveBt.setEnabled(true);
+            binding.sendBt.setEnabled(true);
             binding.saveDummyBt.setEnabled(true);
         }
 

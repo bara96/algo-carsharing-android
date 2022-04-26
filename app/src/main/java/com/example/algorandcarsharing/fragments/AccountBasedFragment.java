@@ -32,7 +32,7 @@ public abstract class AccountBasedFragment extends Fragment {
         try {
             account.loadFromStorage(getActivity());
 
-            if(account.getMnemonic() == null && rootView != null) {
+            if(account.getAddress() == null && rootView != null) {
                 Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
             }
         }

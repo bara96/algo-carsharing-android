@@ -11,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.algorandcarsharing.R;
-import com.example.algorandcarsharing.activities.SettingsActivity;
 import com.example.algorandcarsharing.activities.TripActivity;
 import com.example.algorandcarsharing.constants.SharedPreferencesConstants;
 import com.example.algorandcarsharing.models.TripModel;

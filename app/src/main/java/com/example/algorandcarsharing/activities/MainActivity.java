@@ -6,7 +6,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -15,9 +14,6 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.example.algorandcarsharing.R;
 import com.example.algorandcarsharing.databinding.ActivityMainBinding;
-import com.example.algorandcarsharing.helpers.LogHelper;
-import com.example.algorandcarsharing.models.AccountModel;
-import com.example.algorandcarsharing.services.IndexerService;
 import com.google.android.material.navigation.NavigationView;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;

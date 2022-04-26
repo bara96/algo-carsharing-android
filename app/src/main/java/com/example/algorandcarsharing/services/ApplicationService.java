@@ -4,26 +4,31 @@ import android.content.Context;
 
 import com.algorand.algosdk.account.Account;
 import com.algorand.algosdk.crypto.Address;
+import com.algorand.algosdk.crypto.Digest;
 import com.algorand.algosdk.crypto.LogicsigSignature;
 import com.algorand.algosdk.crypto.TEALProgram;
 import com.algorand.algosdk.logic.StateSchema;
 import com.algorand.algosdk.transaction.SignedTransaction;
 import com.algorand.algosdk.transaction.Transaction;
+import com.algorand.algosdk.transaction.TxGroup;
 import com.algorand.algosdk.v2.client.common.AlgodClient;
 import com.algorand.algosdk.v2.client.common.Response;
+import com.algorand.algosdk.v2.client.model.ApplicationLocalState;
 import com.algorand.algosdk.v2.client.model.CompileResponse;
 import com.algorand.algosdk.v2.client.model.PendingTransactionResponse;
-import com.example.algorandcarsharing.constants.ApplicationConstants;
 import com.example.algorandcarsharing.constants.ClientConstants;
 import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.helpers.ServicesHelper;
 import com.example.algorandcarsharing.helpers.TransactionsHelper;
 import com.example.algorandcarsharing.helpers.UtilsHelper;
+import com.example.algorandcarsharing.models.AccountModel;
 import com.example.algorandcarsharing.models.InsertTripModel;
+import com.example.algorandcarsharing.models.TripModel;
 import com.example.algorandcarsharing.models.TripSchema;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.CompletionException;
@@ -40,7 +45,6 @@ public class ApplicationService implements BaseService {
     protected String clientAddress = ClientConstants.algodClientAddress;
     protected String clientToken = ClientConstants.algodCClientToken;
     protected int clientPort = ClientConstants.algodCClientPort;
-    protected String transactionNote;
 
     public enum ProgramType  {
         ApprovalState,
@@ -49,8 +53,6 @@ public class ApplicationService implements BaseService {
     }
 
     public ApplicationService(String clientAddress, int clientPort, String clientToken) {
-        this.transactionNote = ApplicationConstants.transactionNote;
-
         this.clientAddress = clientAddress;
         this.clientPort = clientPort;
         this.clientToken = clientToken;
@@ -58,8 +60,6 @@ public class ApplicationService implements BaseService {
     }
 
     public ApplicationService() {
-        this.transactionNote = ApplicationConstants.transactionNote;;
-
         this.client = this.connectToClient();
     }
 
@@ -119,7 +119,8 @@ public class ApplicationService implements BaseService {
         return () -> {
             try {
                 // get escrow address
-                Address escrowAddress = getEscrowAddress(appId).get();
+                LogicsigSignature escrowSignature = getEscrowSignature(appId).get();
+                Address escrowAddress = escrowSignature.toAddress();
 
                 List<byte[]> args  = new ArrayList<>();
                 args.add(TripSchema.AppMethod.InitializeEscrow.getValue().getBytes());
@@ -148,8 +149,103 @@ public class ApplicationService implements BaseService {
         };
     }
 
-    protected Future<Address> getEscrowAddress(Long appId) {
-        return new Future<Address>() {
+    public Supplier<Long> participate(TripModel trip, AccountModel account) {
+        return () -> {
+            try {
+                Long appId = trip.id();
+                Long amount = Long.valueOf(trip.getGlobalStateKey(TripSchema.GlobalState.TripCost));
+
+                Account sender = account.getAccount();
+                ApplicationLocalState localState = account.getAppLocalState(appId);
+                if(localState == null) {
+                    // optin to trip if needed
+                    Transaction optin_txn = TransactionsHelper.optin_txn(client, sender.getAddress(), appId, null);
+                    SignedTransaction optin_signedTxn = sender.signTransaction(optin_txn);
+
+                    String txId = TransactionsHelper.sendTransaction(client, optin_signedTxn);
+                    PendingTransactionResponse response = TransactionsHelper.waitForConfirmation(client, txId);
+                    LogHelper.log(this.getClass().getName(), String.format("Opted-in to app-id: %s", appId));
+                }
+
+                // participate to the trip and perform payment to escrow
+                List<byte[]> args  = new ArrayList<>();
+                args.add(TripSchema.AppMethod.Participate.getValue().getBytes());
+
+                Transaction call_txn = TransactionsHelper.noop_txn(client, appId, sender.getAddress(), args);
+                Transaction payment_txn = TransactionsHelper.payment_txn(client, sender.getAddress(), trip.escrowAddress(), amount);
+
+                // group transactions an assign ids
+                Digest gid = TxGroup.computeGroupID(call_txn, payment_txn);
+                call_txn.assignGroupID(gid);
+                payment_txn.assignGroupID(gid);
+
+                // sign individual transactions
+                SignedTransaction call_signedTxn = sender.signTransaction(call_txn);
+                SignedTransaction payment_signedTxn = sender.signTransaction(payment_txn);
+
+                // send transactions
+                String txId = TransactionsHelper.sendTransaction(client, Arrays.asList(call_signedTxn, payment_signedTxn));
+                PendingTransactionResponse response = TransactionsHelper.waitForConfirmation(client, txId);
+
+                LogHelper.log(this.getClass().getName(), String.format("Participated to app-id: %s", appId));
+                return appId;
+            }
+            catch (Exception e) {
+                throw new CompletionException(e);
+            }
+        };
+    }
+
+    public Supplier<Long> cancelParticipation(TripModel trip, AccountModel account) {
+        return () -> {
+            try {
+                Long appId = trip.id();
+                Long amount = Long.valueOf(trip.getGlobalStateKey(TripSchema.GlobalState.TripCost));
+
+                Account sender = account.getAccount();
+                ApplicationLocalState localState = account.getAppLocalState(appId);
+                if(localState == null) {
+                    // optin to trip if needed
+                    Transaction optin_txn = TransactionsHelper.optin_txn(client, sender.getAddress(), appId, null);
+                    SignedTransaction optin_signedTxn = sender.signTransaction(optin_txn);
+
+                    String txId = TransactionsHelper.sendTransaction(client, optin_signedTxn);
+                    PendingTransactionResponse response = TransactionsHelper.waitForConfirmation(client, txId);
+                    LogHelper.log(this.getClass().getName(), String.format("Opted-in to app-id: %s", appId));
+                }
+
+                // participate to the trip and perform payment to escrow
+                List<byte[]> args  = new ArrayList<>();
+                args.add(TripSchema.AppMethod.CancelParticipation.getValue().getBytes());
+
+                Transaction call_txn = TransactionsHelper.noop_txn(client, appId, sender.getAddress(), args);
+                Transaction payment_txn = TransactionsHelper.payment_txn(client, trip.escrowAddress(), sender.getAddress(), amount);
+
+                // group transactions an assign ids
+                Digest gid = TxGroup.computeGroupID(call_txn, payment_txn);
+                call_txn.assignGroupID(gid);
+                payment_txn.assignGroupID(gid);
+
+                // sign individual transactions
+                LogicsigSignature escrowSignature = getEscrowSignature(appId).get();
+                SignedTransaction call_signedTxn = sender.signTransaction(call_txn);
+                SignedTransaction payment_signedTxn = Account.signLogicsigTransaction(escrowSignature, payment_txn);
+
+                // send transactions
+                String txId = TransactionsHelper.sendTransaction(client, Arrays.asList(call_signedTxn, payment_signedTxn));
+                PendingTransactionResponse response = TransactionsHelper.waitForConfirmation(client, txId);
+
+                LogHelper.log(this.getClass().getName(), String.format("Cancelled participation to app-id: %s", appId));
+                return appId;
+            }
+            catch (Exception e) {
+                throw new CompletionException(e);
+            }
+        };
+    }
+
+    protected Future<LogicsigSignature> getEscrowSignature(Long appId) {
+        return new Future<LogicsigSignature>() {
 
             @Override
             public boolean cancel(boolean b) {
@@ -167,7 +263,7 @@ public class ApplicationService implements BaseService {
             }
 
             @Override
-            public Address get() {
+            public LogicsigSignature get() {
                 try {
                     String programSource = "#pragma version 4\n" +
                             "global GroupSize\n" +
@@ -191,9 +287,7 @@ public class ApplicationService implements BaseService {
                     CompileResponse programCompiled = response.body();
                     byte[] program = Base64.getDecoder().decode(programCompiled.result);
 
-                    LogicsigSignature lsig = new LogicsigSignature(program, null);
-
-                    return lsig.toAddress();
+                    return new LogicsigSignature(program, null);
                 }
                 catch (Exception e) {
                     throw new CompletionException(e);
@@ -201,7 +295,7 @@ public class ApplicationService implements BaseService {
             }
 
             @Override
-            public Address get(long l, TimeUnit timeUnit) {
+            public LogicsigSignature get(long l, TimeUnit timeUnit) {
                 return this.get();
             }
         };
