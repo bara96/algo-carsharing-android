@@ -1,7 +1,5 @@
 package com.example.algorandcarsharing.helpers;
 
-import android.util.Log;
-
 import com.algorand.algosdk.account.Account;
 import com.algorand.algosdk.crypto.Address;
 import com.algorand.algosdk.crypto.TEALProgram;
@@ -16,14 +14,9 @@ import com.algorand.algosdk.v2.client.model.PendingTransactionResponse;
 import com.algorand.algosdk.v2.client.model.PostTransactionsResponse;
 import com.algorand.algosdk.v2.client.model.TransactionParametersResponse;
 import com.example.algorandcarsharing.constants.ApplicationConstants;
-import com.example.algorandcarsharing.constants.ClientConstants;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 public class TransactionsHelper {
 

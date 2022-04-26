@@ -6,6 +6,7 @@ import com.example.algorandcarsharing.constants.Constants;
 import com.example.algorandcarsharing.helpers.UtilsHelper;
 
 import java.nio.charset.StandardCharsets;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -40,16 +41,17 @@ public class CreateTripModel implements TripSchema {
     public List<byte[]> getArgs(AlgodClient client) throws ExecutionException, InterruptedException {
         List<byte[]> args = new ArrayList<>();
 
-        Long startDate = this.datetimeToRounds(client, this.tripStartDate).get();
-        Long endDate = this.datetimeToRounds(client, this.tripEndDate).get();
+        Long startDateRound = this.datetimeToRounds(client, this.tripStartDate).get();
+        Long endDateRounds = this.datetimeToRounds(client, this.tripEndDate).get();
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
         args.add(this.creatorName.getBytes(StandardCharsets.UTF_8));
         args.add(this.startAddress.getBytes(StandardCharsets.UTF_8));
         args.add(this.endAddress.getBytes(StandardCharsets.UTF_8));
-        args.add(this.tripStartDate.toString().getBytes(StandardCharsets.UTF_8));
-        args.add(startDate.toString().getBytes(StandardCharsets.UTF_8));
-        args.add(this.tripEndDate.toString().getBytes(StandardCharsets.UTF_8));
-        args.add(endDate.toString().getBytes(StandardCharsets.UTF_8));
+        args.add(dateFormat.format(this.tripStartDate).getBytes(StandardCharsets.UTF_8));
+        args.add(UtilsHelper.IntToBytes(Math.toIntExact(startDateRound)));
+        args.add(dateFormat.format(this.tripEndDate).getBytes(StandardCharsets.UTF_8));
+        args.add(UtilsHelper.IntToBytes(Math.toIntExact(endDateRounds)));
         args.add(UtilsHelper.IntToBytes(this.tripCost));
         args.add(UtilsHelper.IntToBytes(this.availableSeats));
 

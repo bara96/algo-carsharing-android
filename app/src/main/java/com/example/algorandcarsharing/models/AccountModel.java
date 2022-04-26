@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.algorand.algosdk.account.Account;
-import com.example.algorandcarsharing.R;
+import com.example.algorandcarsharing.constants.SharedPreferencesConstants;
 
 public class AccountModel {
 
@@ -79,22 +79,22 @@ public class AccountModel {
 
     public void loadFromStorage(Context context) throws Exception {
         if (context != null) {
-            SharedPreferences sharedPref = context.getSharedPreferences(context.getString(R.string.preferences_account), Context.MODE_PRIVATE);
-            String mnemonic = sharedPref.getString(context.getString(R.string.preference_key_mnemonic), null);
+            SharedPreferences sharedPref = context.getSharedPreferences(SharedPreferencesConstants.AccountPreferences.getPreference(), Context.MODE_PRIVATE);
+            String mnemonic = sharedPref.getString(SharedPreferencesConstants.AccountPreferences.Mnemonic.getKey(), null);
             if(mnemonic != null) {
                 this.setMnemonic(mnemonic);
-                this.balance = sharedPref.getLong(context.getString(R.string.preference_key_balance), 0);
+                this.balance = sharedPref.getLong(SharedPreferencesConstants.AccountPreferences.Balance.getKey(), 0);
             }
         }
     }
 
     public void saveToStorage(Context context) {
         if (context != null) {
-            SharedPreferences sharedPref = context.getSharedPreferences(context.getString(R.string.preferences_account), Context.MODE_PRIVATE);
+            SharedPreferences sharedPref = context.getSharedPreferences(SharedPreferencesConstants.AccountPreferences.getPreference(), Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedPref.edit();
 
-            editor.putString(context.getString(R.string.preference_key_mnemonic), String.valueOf(this.mnemonic).trim());
-            editor.putLong(context.getString(R.string.preference_key_balance), this.balance);
+            editor.putString(SharedPreferencesConstants.AccountPreferences.Mnemonic.getKey(), String.valueOf(this.mnemonic).trim());
+            editor.putLong(SharedPreferencesConstants.AccountPreferences.Balance.getKey(), this.balance);
             editor.apply();
         }
     }

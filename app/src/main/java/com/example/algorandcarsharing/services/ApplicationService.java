@@ -19,8 +19,8 @@ import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.helpers.ServicesHelper;
 import com.example.algorandcarsharing.helpers.TransactionsHelper;
 import com.example.algorandcarsharing.helpers.UtilsHelper;
-import com.example.algorandcarsharing.models.TripSchema;
 import com.example.algorandcarsharing.models.CreateTripModel;
+import com.example.algorandcarsharing.models.TripSchema;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

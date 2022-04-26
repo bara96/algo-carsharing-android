@@ -8,14 +8,11 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.algorandcarsharing.databinding.FragmentAccountBinding;
 import com.example.algorandcarsharing.fragments.AccountBasedFragment;
 import com.example.algorandcarsharing.helpers.LogHelper;
-import com.example.algorandcarsharing.models.AccountModel;
-import com.example.algorandcarsharing.services.AccountService;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.concurrent.CompletableFuture;

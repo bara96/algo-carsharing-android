@@ -1,30 +1,32 @@
-package com.example.algorandcarsharing;
+package com.example.algorandcarsharing.activities;
 
 import android.os.Bundle;
 import android.view.View;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import com.example.algorandcarsharing.databinding.ActivityTripCreateBinding;
+import com.example.algorandcarsharing.R;
+import com.example.algorandcarsharing.constants.SharedPreferencesConstants;
+import com.example.algorandcarsharing.databinding.ActivityTripBinding;
 import com.example.algorandcarsharing.helpers.LogHelper;
-import com.example.algorandcarsharing.models.AccountModel;
 import com.example.algorandcarsharing.models.CreateTripModel;
+import com.example.algorandcarsharing.models.TripModel;
+import com.example.algorandcarsharing.models.TripSchema;
 import com.example.algorandcarsharing.pickers.DateSetter;
 import com.example.algorandcarsharing.pickers.TimeSetter;
 import com.example.algorandcarsharing.services.ApplicationService;
+import com.example.algorandcarsharing.services.IndexerService;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
-public class TripCreateActivity extends AppCompatActivity {
+public class TripActivity extends AccountBasedActivity {
 
-    private ActivityTripCreateBinding binding;
-    private AccountModel account;
+    private TripModel application = null;
+    private ActivityTripBinding binding;
     private View rootView;
-    CompletableFuture completableFuture;
 
     private ApplicationService applicationService;
 
@@ -32,13 +34,12 @@ public class TripCreateActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        binding = ActivityTripCreateBinding.inflate(getLayoutInflater());
+        binding = ActivityTripBinding.inflate(getLayoutInflater());
         rootView = binding.getRoot();
         setContentView(rootView);
         binding.progressBar.setIndeterminate(true);
 
         applicationService = new ApplicationService();
-        account = new AccountModel();
 
         new DateSetter(binding.startDate);
         new TimeSetter(binding.startTime);
@@ -48,7 +49,7 @@ public class TripCreateActivity extends AppCompatActivity {
         binding.saveDummyBt.setOnClickListener(v -> {
             try {
                 CreateTripModel tripData = CreateTripModel.DummyTrip();
-                saveTrip(tripData);
+                createTrip(tripData);
             }
             catch (Exception e) {
                 LogHelper.error("Error saving trip", e);
@@ -61,7 +62,7 @@ public class TripCreateActivity extends AppCompatActivity {
             try {
                 CreateTripModel tripData = validate();
                 if(tripData != null) {
-                    saveTrip(tripData);
+                    createTrip(tripData);
                 }
             }
             catch (Exception e) {
@@ -69,20 +70,18 @@ public class TripCreateActivity extends AppCompatActivity {
                 Snackbar.make(rootView, String.format("Error while creating the trip: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
             }
         });
-    }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        loadAccountData();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        loadAccountData();
+        Long appId = null;
+        if (savedInstanceState == null) {
+            Bundle extras = getIntent().getExtras();
+            if(extras != null) {
+                appId = extras.getLong(SharedPreferencesConstants.IntentExtra.AppId.getKey());
+                loadApplication(appId);
+            }
+        } else {
+            appId = (Long) savedInstanceState.getSerializable(SharedPreferencesConstants.IntentExtra.AppId.getKey());
+            loadApplication(appId);
+        }
     }
 
     @Override
@@ -97,32 +96,56 @@ public class TripCreateActivity extends AppCompatActivity {
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
 
-    private void loadAccountData() {
-        try {
-            account.loadFromStorage(this);
-        }
-        catch (Exception e) {
-            Snackbar.make(rootView, String.format("Error loading account: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
-            e.printStackTrace();
+    private void loadApplication(Long appId) {
+        setLoading(true);
+        if(appId != null) {
+            try {
+                IndexerService indexerService = new IndexerService();
+                CompletableFuture.supplyAsync(indexerService.getApplication(appId))
+                        .thenAcceptAsync(result -> {
+                            if (!result.application.deleted) {
+                                TripModel trip = new TripModel(result.application);
+                                if (trip.isValid()) {
+                                    application = trip;
+                                    runOnUiThread(() -> {
+                                        setTripOnView(application);
+                                    });
+                                } else {
+                                    LogHelper.log("loadApplication()", String.format("Application %s is not a trusted application", result.application.id), LogHelper.LogType.WARNING);
+                                }
+                            }
+                        })
+                        .exceptionally(e -> {
+                            LogHelper.error("loadApplication()", e, false);
+                            return null;
+                        })
+                        .handle((ok, ex) -> {
+                            runOnUiThread(() -> setLoading(false));
+                            return ok;
+                        });
+            } catch (Exception e) {
+                setLoading(false);
+                LogHelper.error("loadApplication()", e, false);
+            }
         }
     }
 
-    private void saveTrip(CreateTripModel tripData) {
+    private void createTrip(CreateTripModel tripData) {
         setLoading(true);
         if(tripData != null && account.getAddress() != null) {
             try {
-                completableFuture = CompletableFuture.supplyAsync(applicationService.createApplication(getApplicationContext(), account.getAccount(), tripData))
+                CompletableFuture.supplyAsync(applicationService.createApplication(getApplicationContext(), account.getAccount(), tripData))
                         .thenComposeAsync(result -> CompletableFuture.supplyAsync(applicationService.initializeEscrow(result, account.getAccount())))
                         .thenAcceptAsync(result -> {
                             Snackbar.make(rootView, String.format("Trip created with id: %s", result), Snackbar.LENGTH_LONG).show();
                         })
-                        .exceptionally(e->{
+                        .exceptionally(e -> {
                             LogHelper.error("CreateTrip", e);
                             account.setAccountInfo(null);
                             Snackbar.make(rootView, String.format("Error during creation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
                             return null;
                         })
-                        .handle( (ok, ex) -> {
+                        .handle((ok, ex) -> {
                             runOnUiThread(() -> setLoading(false));
                             return ok;
                         });
@@ -197,13 +220,57 @@ public class TripCreateActivity extends AppCompatActivity {
             return new CreateTripModel(creatorName, startAddress, endAddress, startDatetime, endDatetime, cost, availableSeats);
     }
 
-    protected void setLoading(boolean isLoading) {
+    private void setTripOnView(TripModel trip) {
+        try {
+            String startDateTime = trip.getGlobalStateKey(TripSchema.GlobalState.DepartureDate);
+            String endDateTime = trip.getGlobalStateKey(TripSchema.GlobalState.ArrivalDate);
+            DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+            DateFormat timeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+            Date startDatetime = new SimpleDateFormat("yyyy/MM/dd HH:mm").parse(startDateTime);
+            Date endDatetime = new SimpleDateFormat("yyyy/MM/dd HH:mm").parse(endDateTime);
+
+            binding.saveBt.setText(getString(R.string.update));
+            binding.creatorName.setText(trip.getGlobalStateKey(TripSchema.GlobalState.CreatorName));
+            binding.startAddress.setText(trip.getGlobalStateKey(TripSchema.GlobalState.DepartureAddress));
+            binding.endAddress.setText(trip.getGlobalStateKey(TripSchema.GlobalState.ArrivalAddress));
+
+            binding.startDate.setText(dateFormat.format(startDatetime));
+            binding.startTime.setText(timeFormat.format(startDatetime));
+
+            binding.endDate.setText(dateFormat.format(endDatetime));
+            binding.endTime.setText(timeFormat.format(endDatetime));
+
+            binding.cost.setText(trip.getGlobalStateKey(TripSchema.GlobalState.TripCost));
+            binding.availableSeats.setText(trip.getGlobalStateKey(TripSchema.GlobalState.AvailableSeats));
+        }
+        catch (Exception e) {
+            Snackbar.make(rootView, "Error loading trip", Snackbar.LENGTH_LONG).show();
+            LogHelper.error("setShowView", e);
+            application = null;
+        }
+    }
+
+    private void setTripViewEditing(boolean enabled) {
+        binding.creatorName.setEnabled(enabled);
+        binding.startAddress.setEnabled(enabled);
+        binding.endAddress.setEnabled(enabled);
+        binding.startDate.setEnabled(enabled);
+        binding.startTime.setEnabled(enabled);
+        binding.endDate.setEnabled(enabled);
+        binding.endTime.setEnabled(enabled);
+        binding.cost.setEnabled(enabled);
+        binding.availableSeats.setEnabled(enabled);
+    }
+
+    private void setLoading(boolean isLoading) {
         if(isLoading) {
+            this.setTripViewEditing(false);
             binding.progressBar.setVisibility(View.VISIBLE);
             binding.saveBt.setEnabled(false);
             binding.saveDummyBt.setEnabled(false);
         }
         else {
+            this.setTripViewEditing(true);
             binding.progressBar.setVisibility(View.GONE);
             binding.saveBt.setEnabled(true);
             binding.saveDummyBt.setEnabled(true);

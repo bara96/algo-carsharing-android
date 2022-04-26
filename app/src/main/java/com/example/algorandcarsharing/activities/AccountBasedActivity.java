@@ -1,15 +1,15 @@
-package com.example.algorandcarsharing.fragments;
+package com.example.algorandcarsharing.activities;
 
 import android.view.View;
 
-import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.models.AccountModel;
 import com.example.algorandcarsharing.services.AccountService;
 import com.google.android.material.snackbar.Snackbar;
 
-public abstract class AccountBasedFragment extends Fragment {
+public abstract class AccountBasedActivity extends AppCompatActivity {
     protected final AccountService accountService = new AccountService();
     protected AccountModel account = new AccountModel();
     protected View rootView;
@@ -30,7 +30,7 @@ public abstract class AccountBasedFragment extends Fragment {
 
     protected void loadAccountData() {
         try {
-            account.loadFromStorage(getActivity());
+            account.loadFromStorage(this);
 
             if(account.getMnemonic() == null && rootView != null) {
                 Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();

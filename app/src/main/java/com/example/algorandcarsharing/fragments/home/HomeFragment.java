@@ -6,21 +6,16 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.algorand.algosdk.v2.client.model.Application;
 import com.algorand.algosdk.v2.client.model.Transaction;
 import com.example.algorandcarsharing.adapters.TripAdapter;
 import com.example.algorandcarsharing.databinding.FragmentHomeBinding;
 import com.example.algorandcarsharing.fragments.AccountBasedFragment;
-import com.example.algorandcarsharing.fragments.account.AccountFragment;
 import com.example.algorandcarsharing.helpers.LogHelper;
-import com.example.algorandcarsharing.helpers.ServicesHelper;
 import com.example.algorandcarsharing.models.TripModel;
-import com.example.algorandcarsharing.models.TripSchema;
 import com.example.algorandcarsharing.services.IndexerService;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -112,8 +107,8 @@ public class HomeFragment extends AccountBasedFragment {
                 futureList.add(CompletableFuture.supplyAsync(indexerService.getApplication(transaction.createdApplicationIndex))
                         .thenAcceptAsync(result -> {
                             if(!result.application.deleted) {
-                                if(ServicesHelper.isTrustedApplication(result.application)) {
-                                    TripModel trip = new TripModel(result.application);
+                                TripModel trip = new TripModel(result.application);
+                                if(trip.isValid()) {
                                     validApplications.add(trip);
                                 }
                                 else {

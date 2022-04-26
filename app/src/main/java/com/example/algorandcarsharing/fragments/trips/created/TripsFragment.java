@@ -10,22 +10,15 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.algorand.algosdk.crypto.Address;
 import com.algorand.algosdk.v2.client.model.Application;
-import com.algorand.algosdk.v2.client.model.TealKeyValue;
-import com.algorand.algosdk.v2.client.model.Transaction;
 import com.example.algorandcarsharing.adapters.TripAdapter;
 import com.example.algorandcarsharing.databinding.FragmentTripsCreatedBinding;
 import com.example.algorandcarsharing.fragments.AccountBasedFragment;
 import com.example.algorandcarsharing.helpers.LogHelper;
-import com.example.algorandcarsharing.helpers.ServicesHelper;
 import com.example.algorandcarsharing.models.TripModel;
-import com.example.algorandcarsharing.models.TripSchema;
 import com.google.android.material.snackbar.Snackbar;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -104,8 +97,8 @@ public class TripsFragment extends AccountBasedFragment {
         for(int i=0; i<applications.size(); i++) {
             try {
                 Application app = applications.get(i);
-                if (ServicesHelper.isTrustedApplication(app)) {
-                    TripModel trip = new TripModel(app);
+                TripModel trip = new TripModel(app);
+                if (trip.isValid()) {
                     validApplications.add(trip);
                 } else {
                     LogHelper.log("searchApplications", String.format("Application %s is not a trusted application", app.id), LogHelper.LogType.WARNING);
