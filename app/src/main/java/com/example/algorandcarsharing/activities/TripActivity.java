@@ -245,7 +245,7 @@ public class TripActivity extends AccountBasedActivity {
                         currentMode = TripViewMode.Leave;
                         runOnUiThread(() -> {
                             setTripViewMode(currentMode);
-                            runOnUiThread(() -> Snackbar.make(rootView, String.format("Joined trip with id: %s", result), Snackbar.LENGTH_LONG).show());
+                            Snackbar.make(rootView, String.format("Joined trip with id: %s", result), Snackbar.LENGTH_LONG).show();
                         });
                     })
                     .exceptionally(e -> {
@@ -283,7 +283,7 @@ public class TripActivity extends AccountBasedActivity {
                         currentMode = TripViewMode.Join;
                         runOnUiThread(() -> {
                             setTripViewMode(currentMode);
-                            runOnUiThread(() -> Snackbar.make(rootView, String.format("Left trip with id: %s", result), Snackbar.LENGTH_LONG).show());
+                            Snackbar.make(rootView, String.format("Left trip with id: %s", result), Snackbar.LENGTH_LONG).show();
                         });
                     })
                     .exceptionally(e -> {

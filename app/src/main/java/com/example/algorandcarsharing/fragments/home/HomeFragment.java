@@ -96,7 +96,7 @@ public class HomeFragment extends AccountBasedFragment {
                         requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeRemoved(0, size));
 
                         LogHelper.error("getAllApplications", e);
-                        requireActivity().runOnUiThread(() -> Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_SHORT).show());
+                        requireActivity().runOnUiThread(() -> Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show());
                         return null;
                     })
                     .handle( (ok, ex) -> {
