@@ -57,7 +57,7 @@
     <string name="start_address_label">Departure Address:</string>
     <string name="end_address">Insert an Address</string>
     <string name="end_address_label">Arrival Address:</string>
-    <string name="date">yyyy/mm/dd</string>
+    <string name="date">yyyy-mm-dd</string>
     <string name="start_date_label">Departure Date:</string>
     <string name="time">hh:mm</string>
     <string name="start_time_label">Departure Time:</string>
@@ -70,5 +70,5 @@
     <string name="availability_label">Availability:</string>
 
 
-    <string name="date_example">2022/05/10 15:00</string>
+    <string name="date_example">2022–05–10 15:00</string>
 </resources>

@@ -51,7 +51,7 @@ public class DateSetter implements View.OnFocusChangeListener, DatePickerDialog.
         mCalendar.set(Calendar.DAY_OF_MONTH, i2);
 
         if (mFormat == null)
-            mFormat = new SimpleDateFormat("yyyy/MM/dd", Locale.getDefault());
+            mFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
         this.mEditText.setText(mFormat.format(mCalendar.getTime()));
     }

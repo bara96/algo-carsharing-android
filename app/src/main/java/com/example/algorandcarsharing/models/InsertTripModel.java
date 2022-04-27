@@ -43,7 +43,7 @@ public class InsertTripModel implements TripSchema {
 
         Long startDateRound = this.datetimeToRounds(client, this.tripStartDate).get();
         Long endDateRounds = this.datetimeToRounds(client, this.tripEndDate).get();
-        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
         args.add(this.creatorName.getBytes(StandardCharsets.UTF_8));
         args.add(this.startAddress.getBytes(StandardCharsets.UTF_8));
@@ -108,13 +108,13 @@ public class InsertTripModel implements TripSchema {
         String creatorName = "Matteo Baratella";
         String startAddress = "Mestre";
         String endAddress = "Milano";
-        String startDate = "2022/05/10 15:00";
-        String endDate = "2022/05/10 21:00";
+        String startDate = "2022-05-10 15:00";
+        String endDate = "2022-05-10 21:00";
         Integer cost = Integer.parseInt("5000");
         Integer availableSeats = Integer.parseInt("4");
 
-        Date dateStart = new SimpleDateFormat("yyyy/MM/dd HH:mm").parse(startDate);
-        Date dateEnd = new SimpleDateFormat("yyyy/MM/dd HH:mm").parse(endDate);
+        Date dateStart = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(startDate);
+        Date dateEnd = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(endDate);
 
         return new InsertTripModel(creatorName, startAddress, endAddress, dateStart, dateEnd, cost, availableSeats);
     }

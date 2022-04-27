@@ -54,43 +54,21 @@ public class AccountFragment extends AccountBasedFragment {
                 String mnemonic = String.valueOf(binding.mnemonic.getText());
                 account.setMnemonic(mnemonic);
                 binding.address.setText(account.getAddress());
-                Snackbar.make(rootView, "Account Saved", Snackbar.LENGTH_LONG).show();
+                performRefresh();
             }
             catch (Exception e) {
                 LogHelper.error("Error saving account", e);
                 Snackbar.make(rootView, String.format("Error while saving the account: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
             }
-            saveAccountData();
         });
 
         binding.swipe.setOnRefreshListener(
                 () -> {
                     if(account.getAddress() == null) {
-                        binding.swipe.setRefreshing(false);
                         Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
-                        return;
                     }
-                    try {
-                        CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
-                                .thenAcceptAsync(result -> {
-                                    requireActivity().runOnUiThread(() -> binding.balance.setText(String.valueOf(result.amount)));
-                                    LogHelper.log("getAccountInfo()", result.toString());
-                                    Snackbar.make(rootView, "Account Refreshed", Snackbar.LENGTH_LONG).show();
-                                })
-                                .exceptionally(e->{
-                                    LogHelper.error("getAccountInfo()", e);
-                                    Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
-                                    return null;
-                                })
-                                .handle( (ok, ex) -> {
-                                    binding.swipe.setRefreshing(false);
-                                    return ok;
-                                });
-                    }
-                    catch (Exception e) {
-                        binding.swipe.setRefreshing(false);
-                        LogHelper.error("getAccountInfo()", e);
-                        Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+                    else {
+                        performRefresh();
                     }
                 });
 
@@ -100,28 +78,50 @@ public class AccountFragment extends AccountBasedFragment {
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-
-        saveAccountData();
-    }
-
-    @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
     }
 
-    public void saveAccountData() {
-        account.saveToStorage(getActivity());
-    }
-
     @Override
-    protected void loadAccountData() {
+    public void loadAccountData() {
         super.loadAccountData();
 
-        binding.mnemonic.setText(account.getMnemonic());
-        binding.address.setText(account.getAddress());
-        binding.balance.setText(String.valueOf(account.getBalance()));
+        if(account.getAddress() != null) {
+            binding.mnemonic.setText(account.getMnemonic());
+            binding.address.setText(account.getAddress());
+            binding.balance.setText(String.valueOf(account.getBalance()));
+        }
+    }
+
+    private void performRefresh() {
+        if(account.getAddress() == null) {
+            binding.swipe.setRefreshing(false);
+            return;
+        }
+        try {
+            CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
+                    .thenAcceptAsync(result -> {
+                        requireActivity().runOnUiThread(() -> binding.balance.setText(String.valueOf(result.amount)));
+                        account.setAccountInfo(result);
+                        account.saveToStorage(getActivity());
+                        LogHelper.log("getAccountInfo()", result.toString());
+                        requireActivity().runOnUiThread(() -> Snackbar.make(rootView, "Account Refreshed", Snackbar.LENGTH_LONG).show());
+                    })
+                    .exceptionally(e->{
+                        LogHelper.error("getAccountInfo()", e);
+                        requireActivity().runOnUiThread(() -> Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show());
+                        return null;
+                    })
+                    .handle( (ok, ex) -> {
+                        binding.swipe.setRefreshing(false);
+                        return ok;
+                    });
+        }
+        catch (Exception e) {
+            binding.swipe.setRefreshing(false);
+            LogHelper.error("getAccountInfo()", e);
+            Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+        }
     }
 }

@@ -31,6 +31,7 @@ public class AccountModel {
 
     public AccountModel() {
         this.mnemonic = null;
+        this.balance = 0L;
         this.accountInfo = null;
         this.account = null;
         this.applicationService = new ApplicationService();
@@ -82,7 +83,7 @@ public class AccountModel {
             CompletableFuture.supplyAsync(accountService.getAccountInfo(this.getAddress()))
                     .thenAcceptAsync(result -> {
                         this.setAccountInfo(result);
-                        LogHelper.log("refreshAccountInfo()", "Refreshed");
+                        LogHelper.log("refreshAccountInfo()", "Refreshed Account Info");
                     })
                     .exceptionally(e->{
                         LogHelper.error("refreshAccountInfo()", e);
@@ -137,7 +138,7 @@ public class AccountModel {
             String mnemonic = sharedPref.getString(SharedPreferencesConstants.AccountPreferences.Mnemonic.getKey(), null);
             if(mnemonic != null) {
                 this.setMnemonic(mnemonic);
-                this.balance = sharedPref.getLong(SharedPreferencesConstants.AccountPreferences.Balance.getKey(), 0);
+                this.balance = sharedPref.getLong(SharedPreferencesConstants.AccountPreferences.Balance.getKey(), 0L);
             }
         }
     }
@@ -148,6 +149,8 @@ public class AccountModel {
             SharedPreferences.Editor editor = sharedPref.edit();
 
             editor.putString(SharedPreferencesConstants.AccountPreferences.Mnemonic.getKey(), String.valueOf(this.mnemonic).trim());
+            System.out.println("saveToStorage");
+            System.out.println(this.balance);
             editor.putLong(SharedPreferencesConstants.AccountPreferences.Balance.getKey(), this.balance);
             editor.apply();
         }

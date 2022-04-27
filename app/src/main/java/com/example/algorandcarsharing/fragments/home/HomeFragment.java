@@ -7,10 +7,12 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.algorand.algosdk.v2.client.model.Transaction;
+import com.example.algorandcarsharing.adapters.RecyclerLinearLayoutManager;
 import com.example.algorandcarsharing.adapters.TripAdapter;
 import com.example.algorandcarsharing.databinding.FragmentHomeBinding;
 import com.example.algorandcarsharing.fragments.AccountBasedFragment;
@@ -31,7 +33,7 @@ public class HomeFragment extends AccountBasedFragment {
     private View rootView;
 
     protected TripAdapter tripAdapter;
-    List<TripModel> applications;
+    protected List<TripModel> applications = new ArrayList<>();
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -41,61 +43,72 @@ public class HomeFragment extends AccountBasedFragment {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         rootView = binding.getRoot();
 
-        applications = new ArrayList<>();
         RecyclerView tripList = binding.tripList;
         tripAdapter = new TripAdapter(applications);
         tripList.setAdapter(tripAdapter);
-        tripList.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        binding.swipe.setOnRefreshListener(
-                () -> {
-                        try {
-                            CompletableFuture.supplyAsync(indexerService.getTransactions())
-                                    .thenAcceptAsync(result -> {
-                                        List<TripModel> apps = searchApplications(result.transactions);
+        LinearLayoutManager layoutManager= new RecyclerLinearLayoutManager(getActivity());
+        tripList.setLayoutManager(layoutManager);
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(tripList.getContext(), layoutManager.getOrientation());
+        tripList.addItemDecoration(dividerItemDecoration);
 
-                                        // remove old elements
-                                        int size = tripAdapter.getItemCount();
-                                        applications.clear();
-                                        requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeRemoved(0, size));
-
-                                        // add new elements
-                                        applications.addAll(apps);
-                                        requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeInserted(0, applications.size()));
-
-                                        LogHelper.log("N° Valid Apps", String.valueOf(apps.size()));
-                                        LogHelper.log("getTransactions", result.toString());
-                                        Snackbar.make(rootView, "Refreshed", Snackbar.LENGTH_LONG).show();
-                                    })
-                                    .exceptionally(e->{
-                                        // remove old elements
-                                        int size = tripAdapter.getItemCount();
-                                        applications.clear();
-                                        requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeRemoved(0, size));
-
-                                        LogHelper.error("getTransactions", e);
-                                        Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_SHORT).show();
-                                        return null;
-                                    })
-                                    .handle( (ok, ex) -> {
-                                        binding.swipe.setRefreshing(false);
-                                        return ok;
-                                    });
-                        }
-                        catch (Exception e) {
-                            binding.swipe.setRefreshing(false);
-                            LogHelper.error("getTransactions", e);
-                            Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
-                        }
-                });
+        binding.swipe.setOnRefreshListener(this::performSearch);
 
         return rootView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        performSearch();
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+
+    private void performSearch() {
+        try {
+            CompletableFuture.supplyAsync(indexerService.getTransactions())
+                    .thenAcceptAsync(result -> {
+                        List<TripModel> apps = searchApplications(result.transactions);
+
+                        // remove old elements
+                        int size = tripAdapter.getItemCount();
+                        applications.clear();
+                        requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeRemoved(0, size));
+
+                        // add new elements
+                        applications.addAll(apps);
+                        requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeInserted(0, applications.size()));
+
+                        //LogHelper.log("getAllApplications", result.toString());
+                        if(apps.size() <= 0) {
+                            requireActivity().runOnUiThread(() -> Snackbar.make(rootView, "No application found", Snackbar.LENGTH_LONG).show());
+                        }
+                    })
+                    .exceptionally(e->{
+                        // remove old elements
+                        int size = tripAdapter.getItemCount();
+                        applications.clear();
+                        requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeRemoved(0, size));
+
+                        LogHelper.error("getAllApplications", e);
+                        requireActivity().runOnUiThread(() -> Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_SHORT).show());
+                        return null;
+                    })
+                    .handle( (ok, ex) -> {
+                        binding.swipe.setRefreshing(false);
+                        return ok;
+                    });
+        }
+        catch (Exception e) {
+            binding.swipe.setRefreshing(false);
+            LogHelper.error("getAllApplications", e);
+            Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+        }
     }
 
     private List<TripModel> searchApplications(List<Transaction> transactions) {
