@@ -234,18 +234,23 @@ public class TripActivity extends AccountBasedActivity {
             Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
             return;
         }
+        if(trip == null || trip.isEmpty()) {
+            setLoading(false);
+            Snackbar.make(rootView, "Invalid trip", Snackbar.LENGTH_LONG).show();
+            return;
+        }
         try {
             CompletableFuture.supplyAsync(applicationService.participate(trip, account))
                     .thenAcceptAsync(result -> {
                         currentMode = TripViewMode.Leave;
                         runOnUiThread(() -> {
                             setTripViewMode(currentMode);
-                            Snackbar.make(rootView, String.format("Joined trip with id: %s", result), Snackbar.LENGTH_LONG).show();
+                            runOnUiThread(() -> Snackbar.make(rootView, String.format("Joined trip with id: %s", result), Snackbar.LENGTH_LONG).show());
                         });
                     })
                     .exceptionally(e -> {
                         LogHelper.error("JoinTrip", e);
-                        runOnUiThread(() ->Snackbar.make(rootView, String.format("Error during participation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show());
+                        runOnUiThread(() -> Snackbar.make(rootView, String.format("Error during participation: %s", e.getMessage()), Snackbar.LENGTH_LONG).show());
                         return null;
                     })
                     .handle((ok, ex) -> {
@@ -267,13 +272,18 @@ public class TripActivity extends AccountBasedActivity {
             Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
             return;
         }
+        if(trip == null || trip.isEmpty()) {
+            setLoading(false);
+            Snackbar.make(rootView, "Invalid trip", Snackbar.LENGTH_LONG).show();
+            return;
+        }
         try {
             CompletableFuture.supplyAsync(applicationService.cancelParticipation(trip, account))
                     .thenAcceptAsync(result -> {
                         currentMode = TripViewMode.Join;
                         runOnUiThread(() -> {
                             setTripViewMode(currentMode);
-                            Snackbar.make(rootView, String.format("Left trip with id: %s", result), Snackbar.LENGTH_LONG).show();
+                            runOnUiThread(() -> Snackbar.make(rootView, String.format("Left trip with id: %s", result), Snackbar.LENGTH_LONG).show());
                         });
                     })
                     .exceptionally(e -> {
@@ -353,6 +363,14 @@ public class TripActivity extends AccountBasedActivity {
 
     private void setTripOnView(TripModel trip) {
         try {
+            binding.sendBt.setText(getString(R.string.update));
+            binding.creatorName.setText(trip.getGlobalStateKey(TripSchema.GlobalState.CreatorName));
+            binding.startAddress.setText(trip.getGlobalStateKey(TripSchema.GlobalState.DepartureAddress));
+            binding.endAddress.setText(trip.getGlobalStateKey(TripSchema.GlobalState.ArrivalAddress));
+
+            binding.cost.setText(trip.getGlobalStateKey(TripSchema.GlobalState.TripCost));
+            binding.availableSeats.setText(trip.getGlobalStateKey(TripSchema.GlobalState.AvailableSeats));
+
             String startDateTime = trip.getGlobalStateKey(TripSchema.GlobalState.DepartureDate);
             String endDateTime = trip.getGlobalStateKey(TripSchema.GlobalState.ArrivalDate);
             DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -360,19 +378,11 @@ public class TripActivity extends AccountBasedActivity {
             Date startDatetime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(startDateTime);
             Date endDatetime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(endDateTime);
 
-            binding.sendBt.setText(getString(R.string.update));
-            binding.creatorName.setText(trip.getGlobalStateKey(TripSchema.GlobalState.CreatorName));
-            binding.startAddress.setText(trip.getGlobalStateKey(TripSchema.GlobalState.DepartureAddress));
-            binding.endAddress.setText(trip.getGlobalStateKey(TripSchema.GlobalState.ArrivalAddress));
-
             binding.startDate.setText(dateFormat.format(startDatetime));
             binding.startTime.setText(timeFormat.format(startDatetime));
 
             binding.endDate.setText(dateFormat.format(endDatetime));
             binding.endTime.setText(timeFormat.format(endDatetime));
-
-            binding.cost.setText(trip.getGlobalStateKey(TripSchema.GlobalState.TripCost));
-            binding.availableSeats.setText(trip.getGlobalStateKey(TripSchema.GlobalState.AvailableSeats));
         }
         catch (Exception e) {
             Snackbar.make(rootView, "Error loading trip", Snackbar.LENGTH_LONG).show();
