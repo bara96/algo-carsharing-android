@@ -4,8 +4,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginLeft="@dimen/margin_medium"
-    android:layout_marginRight="@dimen/margin_medium"
     android:gravity="center_vertical">
 
     <LinearLayout
@@ -40,7 +38,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textStyle="bold"
-            android:text="@string/cost"
+            android:text="@string/trip_cost_label"
             />
 
         <TextView
@@ -49,13 +47,13 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="@string/cost_example" />
+            android:text="@string/trip_cost" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textStyle="bold"
-            android:text="@string/availability"
+            android:text="@string/availability_label"
             />
 
         <TextView
@@ -64,7 +62,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="@string/availability_example" />
+            android:text="@string/available_seats" />
     </LinearLayout>
 
     <LinearLayout
@@ -130,7 +128,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textStyle="bold"
-            android:text="@string/start_date2"
+            android:text="@string/start_date_label"
             />
 
         <TextView
@@ -155,7 +153,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textStyle="bold"
-            android:text="@string/start_date2"
+            android:text="@string/start_date_label"
             />
 
         <TextView

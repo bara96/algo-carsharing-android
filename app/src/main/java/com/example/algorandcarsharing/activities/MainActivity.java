@@ -1,4 +1,4 @@
-package com.example.algorandcarsharing;
+package com.example.algorandcarsharing.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -6,16 +6,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.example.algorandcarsharing.R;
 import com.example.algorandcarsharing.databinding.ActivityMainBinding;
-import com.example.algorandcarsharing.models.AccountModel;
-import com.example.algorandcarsharing.services.IndexerService;
 import com.google.android.material.navigation.NavigationView;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -24,12 +22,10 @@ import java.security.Security;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AccountBasedActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
     private ActivityMainBinding binding;
-
-    private IndexerService indexerService;
 
     private NavController navController;
 
@@ -40,14 +36,14 @@ public class MainActivity extends AppCompatActivity {
         Security.insertProviderAt(new BouncyCastleProvider(), 0);
 
         ExecutorService mExecutor = Executors.newSingleThreadExecutor();
-        indexerService = new IndexerService();
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        rootView = binding.getRoot();
 
         setSupportActionBar(binding.appBarMain.toolbar);
         binding.appBarMain.fab.setOnClickListener(view -> {
-            Intent intent = new Intent(this, TripCreateActivity.class);
+            Intent intent = new Intent(this, TripActivity.class);
             startActivity(intent);
         });
 
@@ -88,13 +84,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkAccount() {
-        AccountModel account = new AccountModel();
-        try {
-            account.loadFromStorage(this);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+        loadAccountData();
         if(account.getAddress() == null) {
             navController.navigate(R.id.nav_account);
         }

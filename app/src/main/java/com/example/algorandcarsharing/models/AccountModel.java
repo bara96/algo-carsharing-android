@@ -4,7 +4,14 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.algorand.algosdk.account.Account;
-import com.example.algorandcarsharing.R;
+import com.algorand.algosdk.v2.client.model.ApplicationLocalState;
+import com.example.algorandcarsharing.constants.SharedPreferencesConstants;
+import com.example.algorandcarsharing.helpers.LogHelper;
+import com.example.algorandcarsharing.services.AccountService;
+import com.example.algorandcarsharing.services.ApplicationService;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class AccountModel {
 
@@ -12,18 +19,21 @@ public class AccountModel {
     protected String mnemonic;
     protected Long balance;
     protected com.algorand.algosdk.v2.client.model.Account accountInfo;
+    protected ApplicationService applicationService;
 
     public AccountModel() {
         this.mnemonic = null;
         this.balance = 0L;
         this.accountInfo = null;
         this.account = null;
+        this.applicationService = new ApplicationService();
     }
 
     public AccountModel(String mnemonic) throws Exception {
         this.balance = 0L;
         this.accountInfo = null;
         this.account = null;
+        this.applicationService = new ApplicationService();
         this.setMnemonic(mnemonic);
     }
 
@@ -56,6 +66,27 @@ public class AccountModel {
         return account;
     }
 
+    public void refreshAccountInfo() {
+        if(this.getAddress() == null) {
+            return;
+        }
+        try {
+            AccountService accountService = new AccountService();
+            CompletableFuture.supplyAsync(accountService.getAccountInfo(this.getAddress()))
+                    .thenAcceptAsync(result -> {
+                        this.setAccountInfo(result);
+                        LogHelper.log("refreshAccountInfo()", "Refreshed Account Info");
+                    })
+                    .exceptionally(e->{
+                        LogHelper.error("refreshAccountInfo()", e);
+                        return null;
+                    });
+        }
+        catch (Exception e) {
+            LogHelper.error("refreshAccountInfo()", e);
+        }
+    }
+
     public com.algorand.algosdk.v2.client.model.Account getAccountInfo() {
         return accountInfo;
     }
@@ -77,24 +108,42 @@ public class AccountModel {
         return null;
     }
 
+    public ApplicationLocalState getAppLocalState(Long appId) {
+        if(this.accountInfo == null) {
+            return null;
+        }
+        List<ApplicationLocalState> appsLocalState = this.accountInfo.appsLocalState;
+        for (int i = 0; i < appsLocalState.size(); i++) {
+            // search if user has local state for this app
+            ApplicationLocalState localStateRaw = appsLocalState.get(i);
+            if (localStateRaw.id.equals(appId)) {
+                return localStateRaw;
+            }
+        }
+
+        return null;
+    }
+
     public void loadFromStorage(Context context) throws Exception {
         if (context != null) {
-            SharedPreferences sharedPref = context.getSharedPreferences(context.getString(R.string.preferences_account), Context.MODE_PRIVATE);
-            String mnemonic = sharedPref.getString(context.getString(R.string.preference_key_mnemonic), null);
+            SharedPreferences sharedPref = context.getSharedPreferences(SharedPreferencesConstants.AccountPreferences.getPreference(), Context.MODE_PRIVATE);
+            String mnemonic = sharedPref.getString(SharedPreferencesConstants.AccountPreferences.Mnemonic.getKey(), null);
             if(mnemonic != null) {
                 this.setMnemonic(mnemonic);
-                this.balance = sharedPref.getLong(context.getString(R.string.preference_key_balance), 0);
+                this.balance = sharedPref.getLong(SharedPreferencesConstants.AccountPreferences.Balance.getKey(), 0L);
             }
         }
     }
 
     public void saveToStorage(Context context) {
         if (context != null) {
-            SharedPreferences sharedPref = context.getSharedPreferences(context.getString(R.string.preferences_account), Context.MODE_PRIVATE);
+            SharedPreferences sharedPref = context.getSharedPreferences(SharedPreferencesConstants.AccountPreferences.getPreference(), Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedPref.edit();
 
-            editor.putString(context.getString(R.string.preference_key_mnemonic), String.valueOf(this.mnemonic).trim());
-            editor.putLong(context.getString(R.string.preference_key_balance), this.balance);
+            editor.putString(SharedPreferencesConstants.AccountPreferences.Mnemonic.getKey(), String.valueOf(this.mnemonic).trim());
+            System.out.println("saveToStorage");
+            System.out.println(this.balance);
+            editor.putLong(SharedPreferencesConstants.AccountPreferences.Balance.getKey(), this.balance);
             editor.apply();
         }
     }

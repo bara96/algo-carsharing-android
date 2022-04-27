@@ -1,5 +1,7 @@
 package com.example.algorandcarsharing.adapters;
 
+import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +11,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.algorandcarsharing.R;
+import com.example.algorandcarsharing.activities.TripActivity;
+import com.example.algorandcarsharing.constants.SharedPreferencesConstants;
 import com.example.algorandcarsharing.models.TripModel;
 import com.example.algorandcarsharing.models.TripSchema;
 
@@ -80,6 +84,13 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.ViewHolder> {
         viewHolder.startDate.setText(startDate);
         viewHolder.endAddress.setText(endAddress);
         viewHolder.endDate.setText(endDate);
+
+        viewHolder.itemView.setOnClickListener(view -> {
+            Context context = view.getContext();
+            Intent intent = new Intent(context, TripActivity.class);
+            intent.putExtra(SharedPreferencesConstants.IntentExtra.AppId.getKey(), localDataSet.get(position).id());
+            context.startActivity(intent);
+        });
     }
 
     // Return the size of your dataset (invoked by the layout manager)
