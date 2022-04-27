@@ -1,6 +1,6 @@
 package com.example.algorandcarsharing.helpers;
 
-import com.algorand.algosdk.account.Account;
+import com.algorand.algosdk.builder.transaction.PaymentTransactionBuilder;
 import com.algorand.algosdk.crypto.Address;
 import com.algorand.algosdk.crypto.TEALProgram;
 import com.algorand.algosdk.logic.StateSchema;
@@ -16,11 +16,11 @@ import com.algorand.algosdk.v2.client.model.TransactionParametersResponse;
 import com.example.algorandcarsharing.constants.ApplicationConstants;
 
 import java.io.ByteArrayOutputStream;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 public class TransactionsHelper {
 
+    public static final Long minFees = 1000L;
     public static final Long escrowMinBalance = 1000000L;
     public static final Long maxWaitingRounds = 1000L;
 
@@ -208,7 +208,7 @@ public class TransactionsHelper {
                 .build();
     }
 
-    public static Transaction payment_txn(AlgodClient client, Address sender, Address receiver, Long amount) throws Exception {
+    public static Transaction payment_txn(AlgodClient client, Address sender, Address receiver, Long amount, Address closeReminderTo) throws Exception {
         Response<TransactionParametersResponse> response = client.TransactionParams().execute();
         ServicesHelper.checkResponse(response);
 
@@ -217,11 +217,16 @@ public class TransactionsHelper {
             throw new Exception("Params retrieval error");
         }
 
-        return Transaction.PaymentTransactionBuilder()
+        PaymentTransactionBuilder<?> txn = Transaction.PaymentTransactionBuilder()
                 .suggestedParams(params)
                 .sender(sender)
                 .receiver(receiver)
-                .amount(amount)
-                .build();
+                .amount(amount);
+
+        if(closeReminderTo != null) {
+            txn.closeRemainderTo(closeReminderTo);
+        }
+
+        return txn.build();
     }
 }

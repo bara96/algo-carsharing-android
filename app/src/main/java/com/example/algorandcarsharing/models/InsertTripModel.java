@@ -38,6 +38,77 @@ public class InsertTripModel implements TripSchema {
         this.availableSeats = availableSeats;
     }
 
+    public InsertTripModel(TripModel tripModel) throws ParseException {
+        String departureDateTime = tripModel.getGlobalStateKey(TripSchema.GlobalState.DepartureDate);
+        String arrivalDateTime = tripModel.getGlobalStateKey(TripSchema.GlobalState.ArrivalDate);
+        Date startDatetime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(departureDateTime);
+        Date endDatetime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(arrivalDateTime);
+
+        this.creatorName = tripModel.getGlobalStateKey(GlobalState.CreatorName);
+        this.startAddress = tripModel.getGlobalStateKey(GlobalState.DepartureAddress);
+        this.endAddress = tripModel.getGlobalStateKey(GlobalState.ArrivalAddress);
+        this.tripStartDate = startDatetime;
+        this.tripEndDate = endDatetime;
+        this.tripCost = Integer.valueOf(tripModel.getGlobalStateKey(GlobalState.TripCost));
+        this.availableSeats = Integer.valueOf(tripModel.getGlobalStateKey(GlobalState.AvailableSeats));
+    }
+
+    public String getCreatorName() {
+        return creatorName;
+    }
+
+    public void setCreatorName(String creatorName) {
+        this.creatorName = creatorName;
+    }
+
+    public String getStartAddress() {
+        return startAddress;
+    }
+
+    public void setStartAddress(String startAddress) {
+        this.startAddress = startAddress;
+    }
+
+    public String getEndAddress() {
+        return endAddress;
+    }
+
+    public void setEndAddress(String endAddress) {
+        this.endAddress = endAddress;
+    }
+
+    public Date getTripStartDate() {
+        return tripStartDate;
+    }
+
+    public void setTripStartDate(Date tripStartDate) {
+        this.tripStartDate = tripStartDate;
+    }
+
+    public Date getTripEndDate() {
+        return tripEndDate;
+    }
+
+    public void setTripEndDate(Date tripEndDate) {
+        this.tripEndDate = tripEndDate;
+    }
+
+    public Integer getTripCost() {
+        return tripCost;
+    }
+
+    public void setTripCost(Integer tripCost) {
+        this.tripCost = tripCost;
+    }
+
+    public Integer getAvailableSeats() {
+        return availableSeats;
+    }
+
+    public void setAvailableSeats(Integer availableSeats) {
+        this.availableSeats = availableSeats;
+    }
+
     public List<byte[]> getArgs(AlgodClient client) throws ExecutionException, InterruptedException {
         List<byte[]> args = new ArrayList<>();
 
@@ -98,24 +169,9 @@ public class InsertTripModel implements TripSchema {
             }
 
             @Override
-            public Long get(long l, TimeUnit timeUnit) throws ExecutionException, InterruptedException, TimeoutException {
+            public Long get(long l, TimeUnit timeUnit) throws ExecutionException, InterruptedException {
                 return this.get();
             }
         };
-    }
-
-    public static InsertTripModel DummyTrip() throws ParseException {
-        String creatorName = "Matteo Baratella";
-        String startAddress = "Mestre";
-        String endAddress = "Milano";
-        String startDate = "2022-05-10 15:00";
-        String endDate = "2022-05-10 21:00";
-        Integer cost = Integer.parseInt("5000");
-        Integer availableSeats = Integer.parseInt("4");
-
-        Date dateStart = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(startDate);
-        Date dateEnd = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(endDate);
-
-        return new InsertTripModel(creatorName, startAddress, endAddress, dateStart, dateEnd, cost, availableSeats);
     }
 }

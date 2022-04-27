@@ -2,24 +2,16 @@ package com.example.algorandcarsharing.models;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.view.View;
 
 import com.algorand.algosdk.account.Account;
-import com.algorand.algosdk.crypto.Address;
-import com.algorand.algosdk.v2.client.common.AlgodClient;
-import com.algorand.algosdk.v2.client.common.Response;
 import com.algorand.algosdk.v2.client.model.ApplicationLocalState;
 import com.example.algorandcarsharing.constants.SharedPreferencesConstants;
 import com.example.algorandcarsharing.helpers.LogHelper;
-import com.example.algorandcarsharing.helpers.ServicesHelper;
 import com.example.algorandcarsharing.services.AccountService;
 import com.example.algorandcarsharing.services.ApplicationService;
-import com.google.android.material.snackbar.Snackbar;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.function.Supplier;
 
 public class AccountModel {
 

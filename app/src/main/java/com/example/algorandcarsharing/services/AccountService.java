@@ -4,7 +4,6 @@ import com.algorand.algosdk.crypto.Address;
 import com.algorand.algosdk.v2.client.common.AlgodClient;
 import com.algorand.algosdk.v2.client.common.Response;
 import com.algorand.algosdk.v2.client.model.Account;
-import com.algorand.algosdk.v2.client.model.ApplicationLocalState;
 import com.example.algorandcarsharing.constants.ApplicationConstants;
 import com.example.algorandcarsharing.constants.ClientConstants;
 import com.example.algorandcarsharing.helpers.ServicesHelper;

@@ -7,9 +7,12 @@ import com.algorand.algosdk.v2.client.model.ApplicationLocalState;
 import com.algorand.algosdk.v2.client.model.TealKeyValue;
 import com.example.algorandcarsharing.constants.ApplicationConstants;
 import com.example.algorandcarsharing.constants.Constants;
+import com.example.algorandcarsharing.helpers.LogHelper;
 
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -30,6 +33,13 @@ public class TripModel implements TripSchema {
      */
     public Long id() {
         return this.application.id;
+    }
+
+    /**
+     * @return the Application cost
+     */
+    public Long cost() {
+        return Long.valueOf(this.getGlobalStateKey(GlobalState.TripCost));
     }
 
     /**
@@ -89,6 +99,29 @@ public class TripModel implements TripSchema {
         return this.application == null || this.application.id == null;
     }
 
+    /**
+     * Check if the application trip can start
+     *
+     * @return true if the trip can start, false otherwise
+     */
+    public boolean canStart() {
+        if(this.isEmpty()) {
+            return false;
+        }
+        try {
+            Date now = new Date();
+            String departureDateTime = this.getGlobalStateKey(TripSchema.GlobalState.DepartureDate);
+            Date startDatetime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(departureDateTime);
+            if(startDatetime != null && startDatetime.getTime() - now.getTime() < 0) {
+                return true;
+            }
+        }
+        catch (Exception e) {
+            LogHelper.error(this.getClass().getName(), e);
+        }
+        return false;
+
+    }
     public String getGlobalStateKey(GlobalState key) {
         return this.globalState.getOrDefault(key.getValue(), null);
     }
@@ -175,6 +208,4 @@ public class TripModel implements TripSchema {
     public static boolean isAddress(String key) {
         return key.equals(GlobalState.Creator.getValue()) || key.equals(GlobalState.EscrowAddress.getValue());
     }
-
-
 }

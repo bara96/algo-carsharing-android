@@ -77,11 +77,11 @@ public class ApplicationService implements BaseService {
      * Create a new application
      *
      * @param context
-     * @param sender
+     * @param creator
      * @param tripArgs
      * @return
      */
-    public Supplier<Long> createApplication(Context context, Account sender, InsertTripModel tripArgs) {
+    public Supplier<Long> createApplication(Context context, Account creator, InsertTripModel tripArgs) {
         return () -> {
                 try {
                     TEALProgram approvalProgram = getCompiledProgram(context, ProgramType.ApprovalState).get();
@@ -93,8 +93,8 @@ public class ApplicationService implements BaseService {
                     List<byte[]> args = tripArgs.getArgs(client);
 
                     // create application
-                    Transaction txn = TransactionsHelper.create_txn(client, sender.getAddress(), approvalProgram, clearStateProgram, globalState, localState, args);
-                    SignedTransaction signedTxn = sender.signTransaction(txn);
+                    Transaction txn = TransactionsHelper.create_txn(client, creator.getAddress(), approvalProgram, clearStateProgram, globalState, localState, args);
+                    SignedTransaction signedTxn = creator.signTransaction(txn);
 
                     String txId = TransactionsHelper.sendTransaction(client, signedTxn);
                     PendingTransactionResponse response = TransactionsHelper.waitForConfirmation(client, txId);
@@ -109,13 +109,44 @@ public class ApplicationService implements BaseService {
     }
 
     /**
+     * Update an application
+     *
+     * @param appId
+     * @param creator
+     * @param tripArgs
+     * @return
+     */
+    public Supplier<Long> updateApplication(Long appId, Account creator, InsertTripModel tripArgs) {
+        return () -> {
+            try {
+                List<byte[]> args = new ArrayList<>();
+                args.add(TripSchema.AppMethod.UpdateTrip.getValue().getBytes(StandardCharsets.UTF_8));
+                args.addAll(tripArgs.getArgs(client));
+
+                // update application
+                Transaction txn = TransactionsHelper.noop_txn(client, appId, creator.getAddress(), args);
+                SignedTransaction signedTxn = creator.signTransaction(txn);
+
+                String txId = TransactionsHelper.sendTransaction(client, signedTxn);
+                PendingTransactionResponse response = TransactionsHelper.waitForConfirmation(client, txId);
+
+                LogHelper.log(this.getClass().getName(), String.format("Updated app-id: %s", response.applicationIndex));
+                return response.applicationIndex;
+            }
+            catch (Exception e) {
+                throw new CompletionException(e);
+            }
+        };
+    }
+
+    /**
      * Initialize the escrow
      *
      * @param appId
-     * @param sender
+     * @param creator
      * @return
      */
-    public Supplier<Long> initializeEscrow(Long appId, Account sender) {
+    public Supplier<Long> initializeEscrow(Long appId, Account creator) {
         return () -> {
             try {
                 // get escrow address
@@ -127,15 +158,15 @@ public class ApplicationService implements BaseService {
                 args.add(escrowAddress.getBytes());
 
                 // link the escrow to the application
-                Transaction txn = TransactionsHelper.noop_txn(client, appId, sender.getAddress(), args);
-                SignedTransaction signedTxn = sender.signTransaction(txn);
+                Transaction txn = TransactionsHelper.noop_txn(client, appId, creator.getAddress(), args);
+                SignedTransaction signedTxn = creator.signTransaction(txn);
 
                 String txId = TransactionsHelper.sendTransaction(client, signedTxn);
                 PendingTransactionResponse response = TransactionsHelper.waitForConfirmation(client, txId);
 
                 // fund escrow
-                Transaction payment_txn = TransactionsHelper.payment_txn(client, sender.getAddress(), escrowAddress, TransactionsHelper.escrowMinBalance);
-                SignedTransaction payment_signedTxn = sender.signTransaction(payment_txn);
+                Transaction payment_txn = TransactionsHelper.payment_txn(client, creator.getAddress(), escrowAddress, TransactionsHelper.escrowMinBalance, null);
+                SignedTransaction payment_signedTxn = creator.signTransaction(payment_txn);
 
                 String payment_txId = TransactionsHelper.sendTransaction(client, payment_signedTxn);
                 PendingTransactionResponse payment_response = TransactionsHelper.waitForConfirmation(client, payment_txId);
@@ -149,9 +180,19 @@ public class ApplicationService implements BaseService {
         };
     }
 
+    /**
+     * Participate to the trip
+     *
+     * @param trip
+     * @param account
+     * @return
+     */
     public Supplier<Long> participate(TripModel trip, AccountModel account) {
         return () -> {
             try {
+                if(!trip.isValid()) {
+                    throw new Exception("The application program is not valid");
+                }
                 Long appId = trip.id();
                 Long amount = Long.valueOf(trip.getGlobalStateKey(TripSchema.GlobalState.TripCost));
 
@@ -172,7 +213,7 @@ public class ApplicationService implements BaseService {
                 args.add(TripSchema.AppMethod.Participate.getValue().getBytes());
 
                 Transaction call_txn = TransactionsHelper.noop_txn(client, appId, sender.getAddress(), args);
-                Transaction payment_txn = TransactionsHelper.payment_txn(client, sender.getAddress(), trip.escrowAddress(), amount);
+                Transaction payment_txn = TransactionsHelper.payment_txn(client, sender.getAddress(), trip.escrowAddress(), amount, null);
 
                 // group transactions an assign ids
                 Digest gid = TxGroup.computeGroupID(call_txn, payment_txn);
@@ -196,9 +237,19 @@ public class ApplicationService implements BaseService {
         };
     }
 
+    /**
+     * Cancel the participation to the trip
+     *
+     * @param trip
+     * @param account
+     * @return
+     */
     public Supplier<Long> cancelParticipation(TripModel trip, AccountModel account) {
         return () -> {
             try {
+                if(!trip.isValid()) {
+                    throw new Exception("The application program is not valid");
+                }
                 Long appId = trip.id();
                 Long amount = Long.valueOf(trip.getGlobalStateKey(TripSchema.GlobalState.TripCost));
 
@@ -219,7 +270,7 @@ public class ApplicationService implements BaseService {
                 args.add(TripSchema.AppMethod.CancelParticipation.getValue().getBytes());
 
                 Transaction call_txn = TransactionsHelper.noop_txn(client, appId, sender.getAddress(), args);
-                Transaction payment_txn = TransactionsHelper.payment_txn(client, trip.escrowAddress(), sender.getAddress(), amount);
+                Transaction payment_txn = TransactionsHelper.payment_txn(client, trip.escrowAddress(), sender.getAddress(), amount, null);
 
                 // group transactions an assign ids
                 Digest gid = TxGroup.computeGroupID(call_txn, payment_txn);
@@ -236,6 +287,49 @@ public class ApplicationService implements BaseService {
                 PendingTransactionResponse response = TransactionsHelper.waitForConfirmation(client, txId);
 
                 LogHelper.log(this.getClass().getName(), String.format("Cancelled participation to app-id: %s", appId));
+                return appId;
+            }
+            catch (Exception e) {
+                throw new CompletionException(e);
+            }
+        };
+    }
+
+    /**
+     * Cancel the participation to the trip
+     *
+     * @param trip
+     * @param creator
+     * @return
+     */
+    public Supplier<Long> startTrip(TripModel trip, Account creator) {
+        return () -> {
+            try {
+                Long appId = trip.id();
+                Long amount = Long.valueOf(trip.getGlobalStateKey(TripSchema.GlobalState.TripCost));
+
+                // participate to the trip and perform payment to escrow
+                List<byte[]> args  = new ArrayList<>();
+                args.add(TripSchema.AppMethod.StartTrip.getValue().getBytes());
+
+                Transaction call_txn = TransactionsHelper.noop_txn(client, appId, creator.getAddress(), args);
+                Transaction payment_txn = TransactionsHelper.payment_txn(client, trip.escrowAddress(), creator.getAddress(), amount, creator.getAddress());
+
+                // group transactions an assign ids
+                Digest gid = TxGroup.computeGroupID(call_txn, payment_txn);
+                call_txn.assignGroupID(gid);
+                payment_txn.assignGroupID(gid);
+
+                // sign individual transactions
+                LogicsigSignature escrowSignature = getEscrowSignature(appId).get();
+                SignedTransaction call_signedTxn = creator.signTransaction(call_txn);
+                SignedTransaction payment_signedTxn = Account.signLogicsigTransaction(escrowSignature, payment_txn);
+
+                // send transactions
+                String txId = TransactionsHelper.sendTransaction(client, Arrays.asList(call_signedTxn, payment_signedTxn));
+                PendingTransactionResponse response = TransactionsHelper.waitForConfirmation(client, txId);
+
+                LogHelper.log(this.getClass().getName(), String.format("Started Trip for app-id: %s", appId));
                 return appId;
             }
             catch (Exception e) {
