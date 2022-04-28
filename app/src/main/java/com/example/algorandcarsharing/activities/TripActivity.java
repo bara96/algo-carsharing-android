@@ -293,11 +293,7 @@ public class TripActivity extends AccountBasedActivity {
             setLoading(true);
             CompletableFuture.supplyAsync(applicationService.startTrip(trip, account.getAccount()))
                     .thenAcceptAsync(result -> {
-                        currentMode = TripViewMode.Locked;
-                        runOnUiThread(() -> {
-                            setTripViewMode(currentMode);
-                            Snackbar.make(rootView, String.format("Started trip with id: %s", appId), Snackbar.LENGTH_LONG).show();
-                        });
+                        runOnUiThread(() -> Snackbar.make(rootView, String.format("Started trip with id: %s", appId), Snackbar.LENGTH_LONG).show());
                     })
                     .exceptionally(e -> {
                         LogHelper.error("StartTrip", e);
@@ -305,10 +301,12 @@ public class TripActivity extends AccountBasedActivity {
                         return null;
                     })
                     .handle((ok, ex) -> {
-                        runOnUiThread(() -> setLoading(false));
-                        if(appId != null) {
-                            loadApplication(appId);
-                        }
+                        runOnUiThread(() -> {
+                            setLoading(false);
+                            if(appId != null) {
+                                loadApplication(appId);
+                            }
+                        });
                         return ok;
                     });
         }
@@ -337,20 +335,19 @@ public class TripActivity extends AccountBasedActivity {
             CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
                     .thenAcceptAsync(result -> this.account.setAccountInfo(result))
                     .thenComposeAsync(result -> CompletableFuture.supplyAsync(applicationService.participate(trip, account)))
-                    .thenAcceptAsync(result -> {
-                        currentMode = TripViewMode.Leave;
-                        runOnUiThread(() -> {
-                            setTripViewMode(currentMode);
-                            Snackbar.make(rootView, String.format("Joined trip with id: %s", result), Snackbar.LENGTH_LONG).show();
-                        });
-                    })
+                    .thenAcceptAsync(result -> runOnUiThread(() -> Snackbar.make(rootView, String.format("Joined trip with id: %s", result), Snackbar.LENGTH_LONG).show()))
                     .exceptionally(e -> {
                         LogHelper.error("JoinTrip", e);
                         runOnUiThread(() -> Snackbar.make(rootView, String.format("Error performing the request: %s", e.getMessage()), Snackbar.LENGTH_LONG).show());
                         return null;
                     })
                     .handle((ok, ex) -> {
-                        runOnUiThread(() -> setLoading(false));
+                        runOnUiThread(() -> {
+                            setLoading(false);
+                            if(appId != null) {
+                                loadApplication(appId);
+                            }
+                        });
                         return ok;
                     });
         }
@@ -379,20 +376,21 @@ public class TripActivity extends AccountBasedActivity {
             CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
                     .thenAcceptAsync(result -> this.account.setAccountInfo(result))
                     .thenComposeAsync(result -> CompletableFuture.supplyAsync(applicationService.cancelParticipation(trip, account)))
-                    .thenAcceptAsync(result -> {
-                        currentMode = TripViewMode.Join;
-                        runOnUiThread(() -> {
-                            setTripViewMode(currentMode);
-                            Snackbar.make(rootView, String.format("Left trip with id: %s", result), Snackbar.LENGTH_LONG).show();
-                        });
-                    })
+                    .thenAcceptAsync(result -> runOnUiThread(() -> {
+                        Snackbar.make(rootView, String.format("Left trip with id: %s", result), Snackbar.LENGTH_LONG).show();
+                    }))
                     .exceptionally(e -> {
                         LogHelper.error("LeaveTrip", e);
                         runOnUiThread(() -> Snackbar.make(rootView, String.format("Error performing the request: %s", e.getMessage()), Snackbar.LENGTH_LONG).show());
                         return null;
                     })
                     .handle((ok, ex) -> {
-                        runOnUiThread(() -> setLoading(false));
+                        runOnUiThread(() -> {
+                            setLoading(false);
+                            if(appId != null) {
+                                loadApplication(appId);
+                            }
+                        });
                         return ok;
                     });
         }
