@@ -517,6 +517,7 @@ public class TripActivity extends AccountBasedActivity {
             }
             else {
                 // at least one participant, set lock mode
+                Snackbar.make(rootView, "Cannot edit trip when at least a participant is joined in", Snackbar.LENGTH_LONG).show();
                 return TripViewMode.Locked;
             }
         }
