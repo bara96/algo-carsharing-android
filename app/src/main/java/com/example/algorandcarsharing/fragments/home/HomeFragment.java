@@ -28,10 +28,8 @@ import java.util.concurrent.CompletableFuture;
 public class HomeFragment extends AccountBasedFragment {
 
     private FragmentHomeBinding binding;
-
     private final IndexerService indexerService = new IndexerService();
     private View rootView;
-
     protected TripAdapter tripAdapter;
     protected List<TripModel> applications = new ArrayList<>();
 
@@ -115,8 +113,8 @@ public class HomeFragment extends AccountBasedFragment {
         List<CompletableFuture> futureList=new ArrayList<>();
         List<TripModel> validApplications = new ArrayList<>();
         for(int i=0; i<transactions.size(); i++) {
-            Transaction transaction = transactions.get(i);
             try {
+                Transaction transaction = transactions.get(i);
                 futureList.add(CompletableFuture.supplyAsync(indexerService.getApplication(transaction.createdApplicationIndex))
                         .thenAcceptAsync(result -> {
                             if(!result.application.deleted) {

@@ -184,9 +184,8 @@ public class TripActivity extends AccountBasedActivity {
                                         ApplicationLocalState localState = this.account.getAppLocalState(trip.id());
                                         if(localState != null) {
                                             // if user has opt-in, check if is participating
-                                            trip.readLocalState(localState);
-                                            String isParticipating = trip.getLocalStateKey(TripSchema.LocalState.IsParticipating);
-                                            if(isParticipating.equals("1")) {
+                                            trip.setLocalState(localState);
+                                            if(trip.isParticipating()) {
                                                 currentMode = TripViewMode.Leave;
                                             }
                                         }

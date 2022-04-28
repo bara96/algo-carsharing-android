@@ -11,26 +11,25 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.algorand.algosdk.v2.client.model.Application;
+import com.algorand.algosdk.v2.client.common.PathResponse;
+import com.algorand.algosdk.v2.client.model.ApplicationLocalState;
 import com.example.algorandcarsharing.adapters.RecyclerLinearLayoutManager;
 import com.example.algorandcarsharing.adapters.TripAdapter;
 import com.example.algorandcarsharing.databinding.FragmentTripsJoinedBinding;
-import com.example.algorandcarsharing.fragments.AccountBasedFragment;
+import com.example.algorandcarsharing.fragments.trips.TripsBasedFragment;
 import com.example.algorandcarsharing.helpers.LogHelper;
+import com.example.algorandcarsharing.models.GenericApplication;
 import com.example.algorandcarsharing.models.TripModel;
+import com.example.algorandcarsharing.services.IndexerService;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public class TripsFragment extends AccountBasedFragment {
+public class TripsFragment extends TripsBasedFragment {
 
     private FragmentTripsJoinedBinding binding;
-    private View rootView;
-    protected TripAdapter tripAdapter;
-    protected List<TripModel> applications = new ArrayList<>();
-
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -55,18 +54,12 @@ public class TripsFragment extends AccountBasedFragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        performSearch();
-    }
-
-    @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
     }
 
-    private void performSearch() {
+    protected void performSearch() {
         if(account.getAddress() == null) {
             binding.swipe.setRefreshing(false);
             Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
@@ -75,7 +68,7 @@ public class TripsFragment extends AccountBasedFragment {
         try {
             CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
                     .thenAcceptAsync(result -> {
-                        List<TripModel> apps = searchApplications(result.createdApps);
+                        List<TripModel> apps = searchApplications(result.appsLocalState);
 
                         // remove old elements
                         int size = tripAdapter.getItemCount();
@@ -109,22 +102,37 @@ public class TripsFragment extends AccountBasedFragment {
         }
     }
 
-    private List<TripModel> searchApplications(List<Application> applications) {
+    protected <T> List<TripModel> searchApplications(List<T> applications) {
+        List<CompletableFuture> futureList=new ArrayList<>();
         List<TripModel> validApplications = new ArrayList<>();
         for(int i=0; i<applications.size(); i++) {
             try {
-                Application app = applications.get(i);
-                TripModel trip = new TripModel(app);
-                if (trip.isValid()) {
-                    validApplications.add(trip);
-                } else {
-                    LogHelper.log("searchApplications", String.format("Application %s is not a trusted application", app.id), LogHelper.LogType.WARNING);
-                }
+                ApplicationLocalState appLocalState = GenericApplication.applicationLocalState(applications.get(i));
+                futureList.add(CompletableFuture.supplyAsync(indexerService.getApplication(appLocalState.id))
+                        .thenAcceptAsync(result -> {
+                            if(!result.application.deleted) {
+                                TripModel trip = new TripModel(result.application);
+                                if(trip.isValid()) {
+                                    trip.setLocalState(appLocalState);
+                                    if(trip.isParticipating()) {
+                                        validApplications.add(trip);
+                                    }
+                                }
+                                else {
+                                    LogHelper.log("getApplication()", String.format("Application %s is not a trusted application", result.application.id), LogHelper.LogType.WARNING);
+                                }
+                            }
+                        })
+                        .exceptionally(e->{
+                            LogHelper.error("getApplication()", e, false);
+                            return null;
+                        }));
             }
             catch (Exception e) {
-                LogHelper.error("searchApplications", e);
+                LogHelper.error("getApplication()", e, false);
             }
         }
+        futureList.forEach(CompletableFuture::join);
         return validApplications;
     }
 }

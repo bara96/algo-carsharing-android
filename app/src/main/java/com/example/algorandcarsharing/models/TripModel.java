@@ -24,7 +24,7 @@ public class TripModel implements TripSchema {
 
     public TripModel(Application application) {
         this.application = application;
-        readGlobalState(application);
+        setGlobalState(application);
     }
 
     /**
@@ -120,8 +120,19 @@ public class TripModel implements TripSchema {
             LogHelper.error(this.getClass().getName(), e);
         }
         return false;
-
     }
+
+    /**
+     * Check if the user is participating.
+     * Requires the LocalState to be set
+     *
+     * @return true if the LocalState is participating, false otherwise
+     */
+    public boolean isParticipating() {
+        String isParticipating = this.getLocalStateKey(LocalState.IsParticipating);
+        return isParticipating.equals("1");
+    }
+
     public String getGlobalStateKey(GlobalState key) {
         return this.globalState.getOrDefault(key.getValue(), null);
     }
@@ -134,24 +145,12 @@ public class TripModel implements TripSchema {
         return globalState;
     }
 
-    public void setGlobalState(HashMap<String, String> globalState) {
-        this.globalState = globalState;
-    }
-
-    public HashMap<String, String> getLocalState() {
-        return localState;
-    }
-
-    public void setLocalState(HashMap<String, String> localState) {
-        this.localState = localState;
-    }
-
     /**
      * Read the LocalState StateSchema of the application
      *
      * @param application
      */
-    public void readLocalState(ApplicationLocalState application) {
+    public void setLocalState(ApplicationLocalState application) {
         if(application != null) {
             this.localState = readState(application.keyValue);
         }
@@ -162,7 +161,7 @@ public class TripModel implements TripSchema {
      *
      * @param application
      */
-    public void readGlobalState(Application application) {
+    public void setGlobalState(Application application) {
         if(application.params != null && application.params.globalState != null) {
             this.globalState = readState(application.params.globalState);
         }
