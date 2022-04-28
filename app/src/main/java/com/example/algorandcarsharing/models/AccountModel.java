@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.algorand.algosdk.account.Account;
+import com.algorand.algosdk.v2.client.model.Application;
 import com.algorand.algosdk.v2.client.model.ApplicationLocalState;
 import com.example.algorandcarsharing.constants.SharedPreferencesConstants;
 import com.example.algorandcarsharing.helpers.LogHelper;
@@ -119,6 +120,23 @@ public class AccountModel {
             ApplicationLocalState localStateRaw = appsLocalState.get(i);
             if (localStateRaw.id.equals(appId)) {
                 return localStateRaw;
+            }
+        }
+
+        return null;
+    }
+
+    public Application getCreatedApps(Long appId) {
+        if(this.accountInfo == null) {
+            return null;
+        }
+
+        List<Application> applications = this.accountInfo.createdApps;
+        for (int i = 0; i < applications.size(); i++) {
+            // search if user has local state for this app
+            Application application = applications.get(i);
+            if (application.id.equals(appId)) {
+                return application;
             }
         }
 

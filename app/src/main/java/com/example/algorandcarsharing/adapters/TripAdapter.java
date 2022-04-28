@@ -116,12 +116,7 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.ViewHolder> {
                     viewHolder.status.setTextColor(context.getColor(R.color.yellow));
                 }
                 else {
-                    if(account != null && Objects.equals(account.getAddress(), trip.creator().toString())) {
-                        viewHolder.status.setText(context.getString(R.string.status_edit));
-                    }
-                    else {
-                        viewHolder.status.setText(context.getString(R.string.status_available));
-                    }
+                    viewHolder.status.setText(context.getString(R.string.status_available));
                     viewHolder.status.setTextColor(context.getColor(R.color.green));
                 }
                 break;

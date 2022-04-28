@@ -126,7 +126,9 @@ public class HomeFragment extends AccountBasedFragment {
                                 TripModel trip = new TripModel(result.application);
                                 if(trip.isValid()) {
                                     trip.setLocalState(account.getAppLocalState(trip.id()));
-                                    validApplications.add(trip);
+                                    if(account.getCreatedApps(trip.id()) == null) {
+                                        validApplications.add(trip);
+                                    }
                                 }
                                 else {
                                     LogHelper.log("getApplication()", String.format("Application %s is not a trusted application", result.application.id), LogHelper.LogType.WARNING);
