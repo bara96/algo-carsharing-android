@@ -58,6 +58,7 @@ public class HomeFragment extends AccountBasedFragment {
     @Override
     public void onResume() {
         super.onResume();
+        account.refreshAccountInfo();
         performSearch();
     }
 
@@ -71,6 +72,7 @@ public class HomeFragment extends AccountBasedFragment {
         try {
             CompletableFuture.supplyAsync(indexerService.getTransactions())
                     .thenAcceptAsync(result -> {
+                        tripAdapter.setAccount(account);
                         List<TripModel> apps = searchApplications(result.transactions);
 
                         // remove old elements
@@ -120,6 +122,7 @@ public class HomeFragment extends AccountBasedFragment {
                             if(!result.application.deleted) {
                                 TripModel trip = new TripModel(result.application);
                                 if(trip.isValid()) {
+                                    trip.setLocalState(account.getAppLocalState(trip.id()));
                                     validApplications.add(trip);
                                 }
                                 else {

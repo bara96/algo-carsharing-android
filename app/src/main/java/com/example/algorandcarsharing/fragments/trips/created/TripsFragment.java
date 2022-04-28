@@ -15,7 +15,6 @@ import com.algorand.algosdk.v2.client.model.Application;
 import com.example.algorandcarsharing.adapters.RecyclerLinearLayoutManager;
 import com.example.algorandcarsharing.adapters.TripAdapter;
 import com.example.algorandcarsharing.databinding.FragmentTripsCreatedBinding;
-import com.example.algorandcarsharing.fragments.AccountBasedFragment;
 import com.example.algorandcarsharing.fragments.trips.TripsBasedFragment;
 import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.models.GenericApplication;
@@ -67,6 +66,7 @@ public class TripsFragment extends TripsBasedFragment {
         try {
             CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
                     .thenAcceptAsync(result -> {
+                        tripAdapter.setAccount(account);
                         List<TripModel> apps = searchApplications(result.createdApps);
 
                         // remove old elements

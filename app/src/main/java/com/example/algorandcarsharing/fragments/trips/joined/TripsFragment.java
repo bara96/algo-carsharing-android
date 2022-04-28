@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.algorand.algosdk.v2.client.common.PathResponse;
 import com.algorand.algosdk.v2.client.model.ApplicationLocalState;
 import com.example.algorandcarsharing.adapters.RecyclerLinearLayoutManager;
 import com.example.algorandcarsharing.adapters.TripAdapter;
@@ -20,7 +19,6 @@ import com.example.algorandcarsharing.fragments.trips.TripsBasedFragment;
 import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.models.GenericApplication;
 import com.example.algorandcarsharing.models.TripModel;
-import com.example.algorandcarsharing.services.IndexerService;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
@@ -68,6 +66,7 @@ public class TripsFragment extends TripsBasedFragment {
         try {
             CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
                     .thenAcceptAsync(result -> {
+                        tripAdapter.setAccount(account);
                         List<TripModel> apps = searchApplications(result.appsLocalState);
 
                         // remove old elements

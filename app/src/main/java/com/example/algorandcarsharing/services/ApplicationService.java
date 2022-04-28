@@ -24,7 +24,7 @@ import com.example.algorandcarsharing.helpers.UtilsHelper;
 import com.example.algorandcarsharing.models.AccountModel;
 import com.example.algorandcarsharing.models.InsertTripModel;
 import com.example.algorandcarsharing.models.TripModel;
-import com.example.algorandcarsharing.models.TripSchema;
+import com.example.algorandcarsharing.models.ApplicationTripSchema;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -87,8 +87,8 @@ public class ApplicationService implements BaseService {
                     TEALProgram approvalProgram = getCompiledProgram(context, ProgramType.ApprovalState).get();
                     TEALProgram clearStateProgram = getCompiledProgram(context, ProgramType.ClearState).get();
 
-                    StateSchema globalState = TripSchema.getGlobalStateSchema();
-                    StateSchema localState = TripSchema.getLocalStateSchema();
+                    StateSchema globalState = ApplicationTripSchema.getGlobalStateSchema();
+                    StateSchema localState = ApplicationTripSchema.getLocalStateSchema();
 
                     List<byte[]> args = tripArgs.getArgs(client);
 
@@ -120,7 +120,7 @@ public class ApplicationService implements BaseService {
         return () -> {
             try {
                 List<byte[]> args = new ArrayList<>();
-                args.add(TripSchema.AppMethod.UpdateTrip.getValue().getBytes(StandardCharsets.UTF_8));
+                args.add(ApplicationTripSchema.AppMethod.UpdateTrip.getValue().getBytes(StandardCharsets.UTF_8));
                 args.addAll(tripArgs.getArgs(client));
 
                 // update application
@@ -154,7 +154,7 @@ public class ApplicationService implements BaseService {
                 Address escrowAddress = escrowSignature.toAddress();
 
                 List<byte[]> args  = new ArrayList<>();
-                args.add(TripSchema.AppMethod.InitializeEscrow.getValue().getBytes());
+                args.add(ApplicationTripSchema.AppMethod.InitializeEscrow.getValue().getBytes());
                 args.add(escrowAddress.getBytes());
 
                 // link the escrow to the application
@@ -194,7 +194,7 @@ public class ApplicationService implements BaseService {
                     throw new Exception("The application program is not valid");
                 }
                 Long appId = trip.id();
-                Long amount = Long.valueOf(trip.getGlobalStateKey(TripSchema.GlobalState.TripCost));
+                Long amount = Long.valueOf(trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.TripCost));
 
                 Account sender = account.getAccount();
                 ApplicationLocalState localState = account.getAppLocalState(appId);
@@ -210,7 +210,7 @@ public class ApplicationService implements BaseService {
 
                 // participate to the trip and perform payment to escrow
                 List<byte[]> args  = new ArrayList<>();
-                args.add(TripSchema.AppMethod.Participate.getValue().getBytes());
+                args.add(ApplicationTripSchema.AppMethod.Participate.getValue().getBytes());
 
                 Transaction call_txn = TransactionsHelper.noop_txn(client, appId, sender.getAddress(), args);
                 Transaction payment_txn = TransactionsHelper.payment_txn(client, sender.getAddress(), trip.escrowAddress(), amount, null);
@@ -251,7 +251,7 @@ public class ApplicationService implements BaseService {
                     throw new Exception("The application program is not valid");
                 }
                 Long appId = trip.id();
-                Long amount = Long.valueOf(trip.getGlobalStateKey(TripSchema.GlobalState.TripCost));
+                Long amount = Long.valueOf(trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.TripCost));
 
                 Account sender = account.getAccount();
                 ApplicationLocalState localState = account.getAppLocalState(appId);
@@ -267,7 +267,7 @@ public class ApplicationService implements BaseService {
 
                 // participate to the trip and perform payment to escrow
                 List<byte[]> args  = new ArrayList<>();
-                args.add(TripSchema.AppMethod.CancelParticipation.getValue().getBytes());
+                args.add(ApplicationTripSchema.AppMethod.CancelParticipation.getValue().getBytes());
 
                 Transaction call_txn = TransactionsHelper.noop_txn(client, appId, sender.getAddress(), args);
                 Transaction payment_txn = TransactionsHelper.payment_txn(client, trip.escrowAddress(), sender.getAddress(), amount, null);
@@ -306,11 +306,11 @@ public class ApplicationService implements BaseService {
         return () -> {
             try {
                 Long appId = trip.id();
-                Long amount = Long.valueOf(trip.getGlobalStateKey(TripSchema.GlobalState.TripCost));
+                Long amount = Long.valueOf(trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.TripCost));
 
                 // participate to the trip and perform payment to escrow
                 List<byte[]> args  = new ArrayList<>();
-                args.add(TripSchema.AppMethod.StartTrip.getValue().getBytes());
+                args.add(ApplicationTripSchema.AppMethod.StartTrip.getValue().getBytes());
 
                 Transaction call_txn = TransactionsHelper.noop_txn(client, appId, creator.getAddress(), args);
                 Transaction payment_txn = TransactionsHelper.payment_txn(client, trip.escrowAddress(), creator.getAddress(), amount, creator.getAddress());

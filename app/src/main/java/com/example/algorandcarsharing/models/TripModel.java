@@ -5,6 +5,7 @@ import com.algorand.algosdk.util.Encoder;
 import com.algorand.algosdk.v2.client.model.Application;
 import com.algorand.algosdk.v2.client.model.ApplicationLocalState;
 import com.algorand.algosdk.v2.client.model.TealKeyValue;
+import com.example.algorandcarsharing.R;
 import com.example.algorandcarsharing.constants.ApplicationConstants;
 import com.example.algorandcarsharing.constants.Constants;
 import com.example.algorandcarsharing.helpers.LogHelper;
@@ -15,12 +16,21 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
-public class TripModel implements TripSchema {
+public class TripModel implements ApplicationTripSchema {
 
     protected Application application;
     protected HashMap<String, String> globalState = new HashMap<>();
     protected HashMap<String, String> localState = new HashMap<>();
+
+    // trip states
+    public enum TripStatus {
+        Available,
+        Full,
+        Starting,
+        Finished,
+    }
 
     public TripModel(Application application) {
         this.application = application;
@@ -110,7 +120,7 @@ public class TripModel implements TripSchema {
         }
         try {
             Date now = new Date();
-            String departureDateTime = this.getGlobalStateKey(TripSchema.GlobalState.DepartureDate);
+            String departureDateTime = this.getGlobalStateKey(ApplicationTripSchema.GlobalState.DepartureDate);
             Date startDatetime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(departureDateTime);
             if(startDatetime != null && startDatetime.getTime() - now.getTime() < 0) {
                 return true;
@@ -122,6 +132,33 @@ public class TripModel implements TripSchema {
         return false;
     }
 
+    public TripStatus getStatus() {
+        if(Integer.parseInt(this.getGlobalStateKey(ApplicationTripSchema.GlobalState.TripState)) == (ApplicationTripSchema.ApplicationState.Started.getValue())) {
+            // trip is already started, no more editable
+            return TripStatus.Finished;
+        }
+        if(this.canStart()) {
+            return TripStatus.Starting;
+        }
+        if(Integer.parseInt(this.getGlobalStateKey(ApplicationTripSchema.GlobalState.AvailableSeats)) == 0) {
+            return TripStatus.Full;
+        }
+        return TripStatus.Available;
+    }
+
+    /**
+     * Check if the trip can be updated.
+     * A trip can be edited if no one is participating and the trip cannot start
+     *
+     * @return true if the Trip can be edited, false otherwise
+     */
+    public boolean isEditable() {
+        int maxSeats = Integer.parseInt(this.getGlobalStateKey(ApplicationTripSchema.GlobalState.MaxParticipants));
+        int availableSeats = Integer.parseInt(this.getGlobalStateKey(ApplicationTripSchema.GlobalState.AvailableSeats));
+
+        return !this.canStart() && maxSeats == availableSeats;
+    }
+
     /**
      * Check if the user is participating.
      * Requires the LocalState to be set
@@ -130,14 +167,20 @@ public class TripModel implements TripSchema {
      */
     public boolean isParticipating() {
         String isParticipating = this.getLocalStateKey(LocalState.IsParticipating);
-        return isParticipating.equals("1");
+        return Objects.equals(isParticipating, "1");
     }
 
     public String getGlobalStateKey(GlobalState key) {
+        if(this.globalState == null) {
+            return null;
+        }
         return this.globalState.getOrDefault(key.getValue(), null);
     }
 
     public String getLocalStateKey(LocalState key) {
+        if(this.localState == null) {
+            return null;
+        }
         return this.localState.getOrDefault(key.getValue(), null);
     }
 
@@ -153,6 +196,9 @@ public class TripModel implements TripSchema {
     public void setLocalState(ApplicationLocalState application) {
         if(application != null) {
             this.localState = readState(application.keyValue);
+        }
+        else {
+            this.localState = null;
         }
     }
 
@@ -204,7 +250,7 @@ public class TripModel implements TripSchema {
      * @param key
      * @return true if the given StateSchema key is an Address, false otherwise
      */
-    public static boolean isAddress(String key) {
+    protected static boolean isAddress(String key) {
         return key.equals(GlobalState.Creator.getValue()) || key.equals(GlobalState.EscrowAddress.getValue());
     }
 }

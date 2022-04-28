@@ -12,7 +12,7 @@ import com.example.algorandcarsharing.helpers.TransactionsHelper;
 import com.example.algorandcarsharing.models.InsertTripModel;
 import com.example.algorandcarsharing.models.TripFactory;
 import com.example.algorandcarsharing.models.TripModel;
-import com.example.algorandcarsharing.models.TripSchema;
+import com.example.algorandcarsharing.models.ApplicationTripSchema;
 import com.example.algorandcarsharing.pickers.DateSetter;
 import com.example.algorandcarsharing.pickers.TimeSetter;
 import com.example.algorandcarsharing.services.ApplicationService;
@@ -158,39 +158,7 @@ public class TripActivity extends AccountBasedActivity {
                             TripModel trip = new TripModel(result.application);
                             if (trip.isValid()) {
                                 application = trip;
-
-                                if(Integer.parseInt(trip.getGlobalStateKey(TripSchema.GlobalState.TripState)) == TripSchema.TripState.Started.getValue()) {
-                                    // the trip is already started, set the lock mode
-                                    currentMode = TripViewMode.Locked;
-                                }
-                                else {
-                                    if(trip.creator().toString().equals(account.getAddress())) {
-                                        // the account is the creator
-                                        int maxSeats = Integer.parseInt(trip.getGlobalStateKey(TripSchema.GlobalState.MaxParticipants));
-                                        int availableSeats = Integer.parseInt(trip.getGlobalStateKey(TripSchema.GlobalState.AvailableSeats));
-                                        if(maxSeats == availableSeats) {
-                                            // no one is participating, set editable
-                                            currentMode = TripViewMode.Update;
-                                        }
-                                        else {
-                                            // at least one participant, set lock mode
-                                            currentMode = TripViewMode.Locked;
-                                        }
-                                    }
-                                    else {
-                                        // the account is a participant, can participate or leave
-                                        currentMode = TripViewMode.Join;
-
-                                        ApplicationLocalState localState = this.account.getAppLocalState(trip.id());
-                                        if(localState != null) {
-                                            // if user has opt-in, check if is participating
-                                            trip.setLocalState(localState);
-                                            if(trip.isParticipating()) {
-                                                currentMode = TripViewMode.Leave;
-                                            }
-                                        }
-                                    }
-                                }
+                                currentMode = getTripViewMode(trip);
 
                                 runOnUiThread(() -> {
                                     setTripOnView(application);
@@ -493,15 +461,15 @@ public class TripActivity extends AccountBasedActivity {
     private void setTripOnView(TripModel trip) {
         try {
             binding.sendBt.setText(getString(R.string.update));
-            binding.creatorName.setText(trip.getGlobalStateKey(TripSchema.GlobalState.CreatorName));
-            binding.startAddress.setText(trip.getGlobalStateKey(TripSchema.GlobalState.DepartureAddress));
-            binding.endAddress.setText(trip.getGlobalStateKey(TripSchema.GlobalState.ArrivalAddress));
+            binding.creatorName.setText(trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.CreatorName));
+            binding.startAddress.setText(trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.DepartureAddress));
+            binding.endAddress.setText(trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.ArrivalAddress));
 
-            binding.cost.setText(trip.getGlobalStateKey(TripSchema.GlobalState.TripCost));
-            binding.availableSeats.setText(trip.getGlobalStateKey(TripSchema.GlobalState.AvailableSeats));
+            binding.cost.setText(trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.TripCost));
+            binding.availableSeats.setText(trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.AvailableSeats));
 
-            String departureDateTime = trip.getGlobalStateKey(TripSchema.GlobalState.DepartureDate);
-            String arrivalDateTime = trip.getGlobalStateKey(TripSchema.GlobalState.ArrivalDate);
+            String departureDateTime = trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.DepartureDate);
+            String arrivalDateTime = trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.ArrivalDate);
             DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
             DateFormat timeFormat = new SimpleDateFormat("HH:mm");
             Date startDatetime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(departureDateTime);
@@ -517,6 +485,44 @@ public class TripActivity extends AccountBasedActivity {
             Snackbar.make(rootView, "Error loading trip", Snackbar.LENGTH_LONG).show();
             LogHelper.error("setShowView", e);
             application = null;
+        }
+    }
+
+    private TripViewMode getTripViewMode(TripModel trip) {
+        int availableSeats = Integer.parseInt(trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.AvailableSeats));
+
+        if(Integer.parseInt(trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.TripState)) == ApplicationTripSchema.ApplicationState.Started.getValue()) {
+            // the trip is already started, set the lock mode
+            return TripViewMode.Locked;
+        }
+
+        if(trip.creator().toString().equals(account.getAddress())) {
+            // the account is the creator
+            if(trip.isEditable()) {
+                // no one is participating, set editable
+                return TripViewMode.Update;
+            }
+            else {
+                // at least one participant, set lock mode
+                return TripViewMode.Locked;
+            }
+        }
+        else {
+            // the account is a participant, can either participate or leave
+            if(availableSeats < 0) {
+                // no available seats
+                return TripViewMode.Locked;
+            }
+
+            ApplicationLocalState localState = this.account.getAppLocalState(trip.id());
+            if(localState != null) {
+                // if user has opt-in, check if is participating
+                trip.setLocalState(localState);
+                if(trip.isParticipating()) {
+                    return TripViewMode.Leave;
+                }
+            }
+           return TripViewMode.Join;
         }
     }
 

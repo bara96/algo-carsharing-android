@@ -112,6 +112,7 @@ public class AccountModel {
         if(this.accountInfo == null) {
             return null;
         }
+
         List<ApplicationLocalState> appsLocalState = this.accountInfo.appsLocalState;
         for (int i = 0; i < appsLocalState.size(); i++) {
             // search if user has local state for this app

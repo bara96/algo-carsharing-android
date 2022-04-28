@@ -48,6 +48,15 @@
     <string name="start_trip">Start Trip</string>
     <string name="create_dummy_trip">Create dummy trip</string>
 
+    <!-- Trip Status Strings -->
+    <string name="status_available">Available</string>
+    <string name="status_full">Full</string>
+    <string name="status_starting">Starting</string>
+    <string name="status_finished">Finished</string>
+    <string name="status_joined">Joined</string>
+    <string name="status_edit">Edit</string>
+    <string name="status_unknown">Unknown Status</string>
+
     <!-- Trip View Strings -->
     <string name="trip">Trip:</string>
     <string name="trip_title">Title</string>
@@ -66,10 +75,13 @@
     <string name="end_time_label">Arrival Time:</string>
     <string name="trip_cost_label">Trip Cost (unitary):</string>
     <string name="trip_cost">0 MicroAlgo</string>
-    <string name="available_seats">0 Seats</string>
+    <string name="available_seats">0 / 4 Seats</string>
+    <string name="max_seats_label">Max Seats:</string>
     <string name="available_seats_label">Available Seats:</string>
     <string name="availability_label">Availability:</string>
+    <string name="trip_status">Trip Status</string>
 
-
+    <string name="microalgo">MicroAlgo</string>
     <string name="date_example">2022–05–10 15:00</string>
+    <string name="cost_example">5000</string>
 </resources>
