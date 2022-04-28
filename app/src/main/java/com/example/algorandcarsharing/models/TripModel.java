@@ -118,6 +118,7 @@ public class TripModel implements ApplicationTripSchema {
         if(this.isEmpty()) {
             return false;
         }
+
         try {
             Date now = new Date();
             String departureDateTime = this.getGlobalStateKey(ApplicationTripSchema.GlobalState.DepartureDate);

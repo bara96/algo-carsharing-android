@@ -305,6 +305,9 @@ public class TripActivity extends AccountBasedActivity {
                     })
                     .handle((ok, ex) -> {
                         runOnUiThread(() -> setLoading(false));
+                        if(appId != null) {
+                            loadApplication(appId);
+                        }
                         return ok;
                     });
         }
@@ -565,6 +568,7 @@ public class TripActivity extends AccountBasedActivity {
             case Locked:
                 binding.sendBt.setText(getString(R.string.update));
                 binding.sendBt.setEnabled(false);
+                binding.sendBt.setVisibility(View.GONE);
                 binding.saveDummyBt.setEnabled(false);
                 binding.saveDummyBt.setVisibility(View.GONE);
                 editEnabled = false;
