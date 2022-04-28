@@ -12,9 +12,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.algorand.algosdk.v2.client.model.Transaction;
+import com.example.algorandcarsharing.R;
 import com.example.algorandcarsharing.adapters.RecyclerLinearLayoutManager;
 import com.example.algorandcarsharing.adapters.TripAdapter;
-import com.example.algorandcarsharing.databinding.FragmentHomeBinding;
+import com.example.algorandcarsharing.databinding.FragmentTripListBinding;
 import com.example.algorandcarsharing.fragments.AccountBasedFragment;
 import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.models.TripModel;
@@ -23,11 +24,12 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 public class HomeFragment extends AccountBasedFragment {
 
-    private FragmentHomeBinding binding;
+    private FragmentTripListBinding binding;
     private final IndexerService indexerService = new IndexerService();
     private View rootView;
     protected TripAdapter tripAdapter;
@@ -38,7 +40,8 @@ public class HomeFragment extends AccountBasedFragment {
         HomeViewModel homeViewModel =
                 new ViewModelProvider(this).get(HomeViewModel.class);
 
-        binding = FragmentHomeBinding.inflate(inflater, container, false);
+        binding = FragmentTripListBinding.inflate(inflater, container, false);
+        binding.label.setText(requireActivity().getString(R.string.available_trips_label));
         rootView = binding.getRoot();
 
         RecyclerView tripList = binding.tripList;

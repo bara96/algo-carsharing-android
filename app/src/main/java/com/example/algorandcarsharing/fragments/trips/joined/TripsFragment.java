@@ -12,9 +12,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.algorand.algosdk.v2.client.model.ApplicationLocalState;
+import com.example.algorandcarsharing.R;
 import com.example.algorandcarsharing.adapters.RecyclerLinearLayoutManager;
 import com.example.algorandcarsharing.adapters.TripAdapter;
-import com.example.algorandcarsharing.databinding.FragmentTripsJoinedBinding;
+import com.example.algorandcarsharing.databinding.FragmentTripListBinding;
 import com.example.algorandcarsharing.fragments.trips.TripsBasedFragment;
 import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.models.GenericApplication;
@@ -27,14 +28,15 @@ import java.util.concurrent.CompletableFuture;
 
 public class TripsFragment extends TripsBasedFragment {
 
-    private FragmentTripsJoinedBinding binding;
+    private com.example.algorandcarsharing.databinding.FragmentTripListBinding binding;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         TripsViewModel userTripsViewModel =
                 new ViewModelProvider(this).get(TripsViewModel.class);
 
-        binding = FragmentTripsJoinedBinding.inflate(inflater, container, false);
+        binding = FragmentTripListBinding.inflate(inflater, container, false);
+        binding.label.setText(requireActivity().getString(R.string.joined_trips_label));
         rootView = binding.getRoot();
 
         RecyclerView tripList = binding.tripList;

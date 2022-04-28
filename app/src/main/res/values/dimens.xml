@@ -10,7 +10,8 @@
     <dimen name="text_medium">16sp</dimen>
     <dimen name="text_large">18sp</dimen>
     <dimen name="margin">20dp</dimen>
-    <dimen name="margin_xsm">16dp</dimen>
+    <dimen name="margin_xsm">14dp</dimen>
     <dimen name="margin_sm">18dp</dimen>
     <dimen name="margin_md">24dp</dimen>
+    <dimen name="margin_lg">28dp</dimen>
 </resources>

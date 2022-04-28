@@ -120,9 +120,14 @@ public class TripActivity extends AccountBasedActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        setTripViewMode(currentMode);
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
-
         loadApplication(appId);
     }
 
