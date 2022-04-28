@@ -1,4 +1,4 @@
-package com.example.algorandcarsharing.fragments.trips.joined;
+package com.example.algorandcarsharing.fragments.trips;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -6,17 +6,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.algorand.algosdk.v2.client.model.ApplicationLocalState;
+import com.algorand.algosdk.v2.client.model.Transaction;
 import com.example.algorandcarsharing.R;
-import com.example.algorandcarsharing.adapters.RecyclerLinearLayoutManager;
-import com.example.algorandcarsharing.adapters.TripAdapter;
-import com.example.algorandcarsharing.databinding.FragmentTripListBinding;
-import com.example.algorandcarsharing.fragments.trips.TripsBasedFragment;
 import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.models.GenericApplication;
 import com.example.algorandcarsharing.models.TripModel;
@@ -26,29 +18,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public class TripsFragment extends TripsBasedFragment {
+public class HomeFragment extends TripsBasedFragment {
 
-    private com.example.algorandcarsharing.databinding.FragmentTripListBinding binding;
-
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
-        TripsViewModel userTripsViewModel =
-                new ViewModelProvider(this).get(TripsViewModel.class);
-
-        binding = FragmentTripListBinding.inflate(inflater, container, false);
-        binding.label.setText(requireActivity().getString(R.string.joined_trips_label));
-        rootView = binding.getRoot();
-
-        RecyclerView tripList = binding.tripList;
-        tripAdapter = new TripAdapter(applications);
-        tripList.setAdapter(tripAdapter);
-
-        LinearLayoutManager layoutManager= new RecyclerLinearLayoutManager(getActivity());
-        tripList.setLayoutManager(layoutManager);
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(tripList.getContext(), layoutManager.getOrientation());
-        tripList.addItemDecoration(dividerItemDecoration);
-
-        binding.swipe.setOnRefreshListener(this::performSearch);
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        super.onCreateView(inflater, container, savedInstanceState);
+        binding.label.setText(requireActivity().getString(R.string.available_trips_label));
 
         return rootView;
     }
@@ -60,16 +35,11 @@ public class TripsFragment extends TripsBasedFragment {
     }
 
     protected void performSearch() {
-        if(account.getAddress() == null) {
-            binding.swipe.setRefreshing(false);
-            Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
-            return;
-        }
         try {
-            CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
+            CompletableFuture.supplyAsync(indexerService.getTransactions())
                     .thenAcceptAsync(result -> {
                         tripAdapter.setAccount(account);
-                        List<TripModel> apps = searchApplications(result.appsLocalState);
+                        List<TripModel> apps = searchApplications(result.transactions);
 
                         // remove old elements
                         int size = tripAdapter.getItemCount();
@@ -80,14 +50,18 @@ public class TripsFragment extends TripsBasedFragment {
                         applications.addAll(apps);
                         requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeInserted(0, applications.size()));
 
-                        //LogHelper.log("getJoinedApplications", result.toString());
+                        //LogHelper.log("getAllApplications", result.toString());
                         if(apps.size() <= 0) {
                             requireActivity().runOnUiThread(() -> Snackbar.make(rootView, "No application found", Snackbar.LENGTH_LONG).show());
                         }
                     })
                     .exceptionally(e->{
-                        account.setAccountInfo(null);
-                        LogHelper.error("getJoinedApplications", e);
+                        // remove old elements
+                        int size = tripAdapter.getItemCount();
+                        applications.clear();
+                        requireActivity().runOnUiThread(() -> tripAdapter.notifyItemRangeRemoved(0, size));
+
+                        LogHelper.error("getAllApplications", e);
                         requireActivity().runOnUiThread(() -> Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show());
                         return null;
                     })
@@ -98,24 +72,31 @@ public class TripsFragment extends TripsBasedFragment {
         }
         catch (Exception e) {
             binding.swipe.setRefreshing(false);
-            LogHelper.error("getJoinedApplications", e);
+            LogHelper.error("getAllApplications", e);
             Snackbar.make(rootView, String.format("Error during refresh: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
         }
     }
 
-    protected <T> List<TripModel> searchApplications(List<T> applications) {
+    protected <T> List<TripModel> searchApplications(List<T> transactions) {
         List<CompletableFuture> futureList=new ArrayList<>();
         List<TripModel> validApplications = new ArrayList<>();
-        for(int i=0; i<applications.size(); i++) {
+        for(int i=0; i<transactions.size(); i++) {
             try {
-                ApplicationLocalState appLocalState = GenericApplication.applicationLocalState(applications.get(i));
-                futureList.add(CompletableFuture.supplyAsync(indexerService.getApplication(appLocalState.id))
+                Transaction transaction = GenericApplication.transaction(transactions.get(i));
+                futureList.add(CompletableFuture.supplyAsync(indexerService.getApplication(transaction.createdApplicationIndex))
                         .thenAcceptAsync(result -> {
                             if(!result.application.deleted) {
                                 TripModel trip = new TripModel(result.application);
                                 if(trip.isValid()) {
-                                    trip.setLocalState(appLocalState);
-                                    if(trip.isParticipating()) {
+                                    if(account != null) {
+                                        // if account is set, remove user created trips
+                                        trip.setLocalState(account.getAppLocalState(trip.id()));
+                                        if(account.getCreatedApps(trip.id()) == null) {
+                                            validApplications.add(trip);
+                                        }
+                                    }
+                                    else {
+                                        // add all trips
                                         validApplications.add(trip);
                                     }
                                 }
@@ -136,4 +117,5 @@ public class TripsFragment extends TripsBasedFragment {
         futureList.forEach(CompletableFuture::join);
         return validApplications;
     }
+
 }

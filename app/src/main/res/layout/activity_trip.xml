@@ -19,71 +19,99 @@
             android:layout_marginLeft="@dimen/margin_md"
             android:layout_marginRight="@dimen/margin_md">
 
-            <androidx.cardview.widget.CardView
-                android:id="@+id/status_layout"
+            <FrameLayout
+                android:id="@+id/card_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/margin_xsm"
-                app:cardElevation="6dp"
-                app:cardMaxElevation="6dp"
-                app:cardCornerRadius="20dp"
-                app:cardBackgroundColor="@color/white"
-                app:cardPreventCornerOverlap="true"
-                app:cardUseCompatPadding="true"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toTopOf="parent"
+                >
 
-                <LinearLayout
+                <ImageButton
+                    android:id="@+id/close_card"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end|top"
+                    android:background="@null"
+                    android:contentDescription="@string/close"
+                    android:translationZ="10dp"
+                    android:paddingTop="@dimen/margin_lg"
+                    android:paddingBottom="@dimen/margin_md"
+                    android:paddingStart="@dimen/margin_md"
+                    android:paddingEnd="@dimen/margin_sm"
+                    app:srcCompat="@drawable/ic_baseline_close_24" />
+
+                <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_margin="@dimen/margin_sm">
+                    android:layout_marginTop="@dimen/margin_xsm"
+                    app:cardElevation="6dp"
+                    app:cardMaxElevation="6dp"
+                    app:cardCornerRadius="20dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:cardUseCompatPadding="true">
 
-                    <LinearLayout
+                    <androidx.constraintlayout.widget.ConstraintLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="@dimen/margin_xsm">
+                        android:layout_margin="@dimen/margin_sm"
+                        >
 
-                        <TextView
-                            android:layout_width="0dp"
+                        <LinearLayout
+                            android:id="@+id/card_participants_layout"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/availability_label"
-                            android:textSize="@dimen/text_medium"
-                            android:textStyle="bold" />
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="@dimen/margin_xsm"
+                            app:layout_constraintLeft_toLeftOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            >
 
-                        <TextView
-                            android:layout_width="0dp"
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/participants_label"
+                                android:textSize="@dimen/text_medium"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="2"
+                                android:gravity="center"
+                                android:text="@string/participants" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/card_status_layout"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="2"
-                            android:gravity="center"
-                            android:text="@string/available_seats" />
-                    </LinearLayout>
+                            android:orientation="horizontal"
+                            app:layout_constraintLeft_toLeftOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/card_participants_layout">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/trip_status_label"
+                                android:textSize="@dimen/text_medium"
+                                android:textStyle="bold" />
 
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/availability_label"
-                            android:textSize="@dimen/text_medium"
-                            android:textStyle="bold" />
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="2"
+                                android:gravity="center"
+                                android:textAllCaps="true"
+                                android:text="@string/trip_status" />
+                        </LinearLayout>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
 
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="2"
-                            android:gravity="center"
-                            android:text="@string/available_seats" />
-                    </LinearLayout>
-                </LinearLayout>
 
-            </androidx.cardview.widget.CardView>
+                </androidx.cardview.widget.CardView>
+            </FrameLayout>
 
             <LinearLayout
                 android:id="@+id/creator_layout"
@@ -92,7 +120,7 @@
                 android:layout_marginTop="@dimen/margin_sm"
                 android:orientation="vertical"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/status_layout">
+                app:layout_constraintTop_toBottomOf="@id/card_layout">
 
                 <TextView
                     android:layout_width="wrap_content"

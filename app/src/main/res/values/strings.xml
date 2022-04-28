@@ -83,9 +83,13 @@
     <string name="max_seats_label">Max Seats:</string>
     <string name="available_seats_label">Available Seats:</string>
     <string name="availability_label">Availability:</string>
+    <string name="trip_status_label">Trip Status:</string>
     <string name="trip_status">Trip Status</string>
+    <string name="participants_label">Participants:</string>
+    <string name="participants">0 / 4 Participants</string>
 
     <string name="microalgo">MicroAlgo</string>
     <string name="date_example">2022–05–10 15:00</string>
     <string name="cost_example">5000</string>
+    <string name="close">Close</string>
 </resources>

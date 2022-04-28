@@ -74,6 +74,8 @@ public class TripActivity extends AccountBasedActivity {
 
         });
 
+        binding.closeCard.setOnClickListener(view -> binding.cardLayout.setVisibility(View.GONE));
+
         binding.sendBt.setOnClickListener(v -> {
             try {
                 InsertTripModel tripData = null;
@@ -544,6 +546,7 @@ public class TripActivity extends AccountBasedActivity {
 
     private void setTripViewMode(TripViewMode viewMode) {
         boolean editEnabled = false;
+
         switch (viewMode) {
             case Join:
                 binding.sendBt.setText(getString(R.string.join));
@@ -551,6 +554,7 @@ public class TripActivity extends AccountBasedActivity {
                 binding.sendBt.setVisibility(View.VISIBLE);
                 binding.saveDummyBt.setEnabled(false);
                 binding.saveDummyBt.setVisibility(View.GONE);
+                binding.cardLayout.setVisibility(View.VISIBLE);
                 editEnabled = false;
                 break;
             case Leave:
@@ -559,6 +563,7 @@ public class TripActivity extends AccountBasedActivity {
                 binding.sendBt.setVisibility(View.VISIBLE);
                 binding.saveDummyBt.setEnabled(false);
                 binding.saveDummyBt.setVisibility(View.GONE);
+                binding.cardLayout.setVisibility(View.VISIBLE);
                 editEnabled = false;
                 break;
             case Create:
@@ -567,6 +572,7 @@ public class TripActivity extends AccountBasedActivity {
                 binding.sendBt.setVisibility(View.VISIBLE);
                 binding.saveDummyBt.setEnabled(true);
                 binding.saveDummyBt.setVisibility(View.VISIBLE);
+                binding.cardLayout.setVisibility(View.GONE);
                 editEnabled = true;
                 break;
             case Update:
@@ -575,6 +581,7 @@ public class TripActivity extends AccountBasedActivity {
                 binding.sendBt.setVisibility(View.VISIBLE);
                 binding.saveDummyBt.setEnabled(false);
                 binding.saveDummyBt.setVisibility(View.GONE);
+                binding.cardLayout.setVisibility(View.VISIBLE);
                 editEnabled = true;
                 break;
             case Locked:
@@ -583,6 +590,7 @@ public class TripActivity extends AccountBasedActivity {
                 binding.sendBt.setVisibility(View.GONE);
                 binding.saveDummyBt.setEnabled(false);
                 binding.saveDummyBt.setVisibility(View.GONE);
+                binding.cardLayout.setVisibility(View.VISIBLE);
                 editEnabled = false;
                 break;
             case Start:
@@ -591,6 +599,7 @@ public class TripActivity extends AccountBasedActivity {
                 binding.sendBt.setVisibility(View.VISIBLE);
                 binding.saveDummyBt.setEnabled(false);
                 binding.saveDummyBt.setVisibility(View.GONE);
+                binding.cardLayout.setVisibility(View.VISIBLE);
         }
 
         binding.creatorName.setEnabled(editEnabled);
