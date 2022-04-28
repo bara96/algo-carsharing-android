@@ -16,9 +16,8 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-public class InsertTripModel implements TripSchema {
+public class InsertTripModel implements ApplicationTripSchema {
 
     protected String creatorName;
     protected String startAddress;
@@ -39,8 +38,8 @@ public class InsertTripModel implements TripSchema {
     }
 
     public InsertTripModel(TripModel tripModel) throws ParseException {
-        String departureDateTime = tripModel.getGlobalStateKey(TripSchema.GlobalState.DepartureDate);
-        String arrivalDateTime = tripModel.getGlobalStateKey(TripSchema.GlobalState.ArrivalDate);
+        String departureDateTime = tripModel.getGlobalStateKey(ApplicationTripSchema.GlobalState.DepartureDate);
+        String arrivalDateTime = tripModel.getGlobalStateKey(ApplicationTripSchema.GlobalState.ArrivalDate);
         Date startDatetime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(departureDateTime);
         Date endDatetime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(arrivalDateTime);
 

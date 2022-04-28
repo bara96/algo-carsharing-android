@@ -3,7 +3,7 @@ package com.example.algorandcarsharing.models;
 
 import com.algorand.algosdk.logic.StateSchema;
 
-public interface TripSchema {
+public interface ApplicationTripSchema {
 
     // global state fields
     public static StateSchema getGlobalStateSchema() {
@@ -75,15 +75,15 @@ public interface TripSchema {
         }
     }
 
-    // trip states
-    public enum TripState {
+    // internal application states
+    public enum ApplicationState {
         NotInitialized(0),
         Initialized(1),
         Started(2);
 
         private final Integer value;
 
-        TripState(Integer value) {
+        ApplicationState(Integer value) {
             this.value = value;
         }
 

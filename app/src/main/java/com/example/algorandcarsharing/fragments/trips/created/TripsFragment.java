@@ -12,11 +12,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.algorand.algosdk.v2.client.model.Application;
+import com.example.algorandcarsharing.R;
 import com.example.algorandcarsharing.adapters.RecyclerLinearLayoutManager;
 import com.example.algorandcarsharing.adapters.TripAdapter;
-import com.example.algorandcarsharing.databinding.FragmentTripsCreatedBinding;
-import com.example.algorandcarsharing.fragments.AccountBasedFragment;
+import com.example.algorandcarsharing.databinding.FragmentTripListBinding;
+import com.example.algorandcarsharing.fragments.trips.TripsBasedFragment;
 import com.example.algorandcarsharing.helpers.LogHelper;
+import com.example.algorandcarsharing.models.GenericApplication;
 import com.example.algorandcarsharing.models.TripModel;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -24,19 +26,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public class TripsFragment extends AccountBasedFragment {
+public class TripsFragment extends TripsBasedFragment {
 
-    private FragmentTripsCreatedBinding binding;
-    private View rootView;
-    protected TripAdapter tripAdapter;
-    protected List<TripModel> applications = new ArrayList<>();
+    private com.example.algorandcarsharing.databinding.FragmentTripListBinding binding;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         TripsViewModel userTripsViewModel =
                 new ViewModelProvider(this).get(TripsViewModel.class);
 
-        binding = FragmentTripsCreatedBinding.inflate(inflater, container, false);
+        binding = FragmentTripListBinding.inflate(inflater, container, false);
+        binding.label.setText(requireActivity().getString(R.string.created_trips_label));
         rootView = binding.getRoot();
 
         RecyclerView tripList = binding.tripList;
@@ -54,18 +54,12 @@ public class TripsFragment extends AccountBasedFragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        performSearch();
-    }
-
-    @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
     }
 
-    private void performSearch() {
+    protected void performSearch() {
         if(account.getAddress() == null) {
             binding.swipe.setRefreshing(false);
             Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
@@ -74,6 +68,7 @@ public class TripsFragment extends AccountBasedFragment {
         try {
             CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
                     .thenAcceptAsync(result -> {
+                        tripAdapter.setAccount(account);
                         List<TripModel> apps = searchApplications(result.createdApps);
 
                         // remove old elements
@@ -108,11 +103,11 @@ public class TripsFragment extends AccountBasedFragment {
         }
     }
 
-    private List<TripModel> searchApplications(List<Application> applications) {
+    protected <T> List<TripModel> searchApplications(List<T> applications) {
         List<TripModel> validApplications = new ArrayList<>();
         for(int i=0; i<applications.size(); i++) {
             try {
-                Application app = applications.get(i);
+                Application app = GenericApplication.application(applications.get(i));
                 TripModel trip = new TripModel(app);
                 if (trip.isValid()) {
                     validApplications.add(trip);

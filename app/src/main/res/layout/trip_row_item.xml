@@ -4,6 +4,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginTop="2dp"
+    android:layout_marginBottom="2dp"
     android:gravity="center_vertical">
 
     <LinearLayout
@@ -35,23 +37,9 @@
         app:layout_constraintTop_toBottomOf="@id/title_layout"
         >
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textStyle="bold"
-            android:text="@string/trip_cost_label"
-            />
-
-        <TextView
-            android:id="@+id/cost"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:gravity="center"
-            android:text="@string/trip_cost" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:textStyle="bold"
             android:text="@string/availability_label"
             />
@@ -60,10 +48,12 @@
             android:id="@+id/availability"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_weight="2"
             android:gravity="center"
             android:text="@string/available_seats" />
+
     </LinearLayout>
+
 
     <LinearLayout
         android:id="@+id/start_address_layout"
@@ -163,5 +153,54 @@
             android:layout_weight="2"
             android:gravity="center"
             android:text="@string/date_example" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/status_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="4dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/end_date_layout"
+        >
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="parent"
+            >
+            <TextView
+                android:id="@+id/cost"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/cost_example" />
+
+            <ImageView
+                android:id="@+id/microalgo"
+                android:layout_width="22sp"
+                android:layout_height="22sp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:src="@drawable/algo_logo"
+                android:contentDescription="@string/microalgo" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/status"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:textAllCaps="true"
+            android:textColor="@color/blue"
+            android:text="@string/trip_status" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

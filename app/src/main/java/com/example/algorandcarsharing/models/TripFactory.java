@@ -8,7 +8,7 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
-public class TripFactory implements TripSchema {
+public class TripFactory implements ApplicationTripSchema {
 
     public static String getName() {
         List<String> names = new ArrayList<>(Arrays.asList("Neha Santiago", "Alvin Reyna", "Jack Corona", "Karam Adkins", "Humera Downes", "Beatrix Dickinson", "Cerys Bartlett", "Rukhsar Petersen", "Blessing Benton"));

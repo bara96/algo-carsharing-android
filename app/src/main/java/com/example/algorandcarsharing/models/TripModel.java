@@ -5,6 +5,7 @@ import com.algorand.algosdk.util.Encoder;
 import com.algorand.algosdk.v2.client.model.Application;
 import com.algorand.algosdk.v2.client.model.ApplicationLocalState;
 import com.algorand.algosdk.v2.client.model.TealKeyValue;
+import com.example.algorandcarsharing.R;
 import com.example.algorandcarsharing.constants.ApplicationConstants;
 import com.example.algorandcarsharing.constants.Constants;
 import com.example.algorandcarsharing.helpers.LogHelper;
@@ -15,16 +16,25 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
-public class TripModel implements TripSchema {
+public class TripModel implements ApplicationTripSchema {
 
     protected Application application;
     protected HashMap<String, String> globalState = new HashMap<>();
     protected HashMap<String, String> localState = new HashMap<>();
 
+    // trip states
+    public enum TripStatus {
+        Available,
+        Full,
+        Starting,
+        Finished,
+    }
+
     public TripModel(Application application) {
         this.application = application;
-        readGlobalState(application);
+        setGlobalState(application);
     }
 
     /**
@@ -100,6 +110,15 @@ public class TripModel implements TripSchema {
     }
 
     /**
+     * Check if the application trip is started
+     *
+     * @return true if the trip is started, false otherwise
+     */
+    public boolean isStarted(){
+        return Integer.parseInt(this.getGlobalStateKey(GlobalState.TripState)) == (ApplicationState.Started.getValue());
+    }
+
+    /**
      * Check if the application trip can start
      *
      * @return true if the trip can start, false otherwise
@@ -108,9 +127,14 @@ public class TripModel implements TripSchema {
         if(this.isEmpty()) {
             return false;
         }
+        if(this.isStarted()) {
+            // trip is already started
+            return false;
+        }
+
         try {
             Date now = new Date();
-            String departureDateTime = this.getGlobalStateKey(TripSchema.GlobalState.DepartureDate);
+            String departureDateTime = this.getGlobalStateKey(ApplicationTripSchema.GlobalState.DepartureDate);
             Date startDatetime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(departureDateTime);
             if(startDatetime != null && startDatetime.getTime() - now.getTime() < 0) {
                 return true;
@@ -120,13 +144,57 @@ public class TripModel implements TripSchema {
             LogHelper.error(this.getClass().getName(), e);
         }
         return false;
-
     }
+
+    public TripStatus getStatus() {
+        if(Integer.parseInt(this.getGlobalStateKey(ApplicationTripSchema.GlobalState.TripState)) == (ApplicationTripSchema.ApplicationState.Started.getValue())) {
+            // trip is already started, no more editable
+            return TripStatus.Finished;
+        }
+        if(this.canStart()) {
+            return TripStatus.Starting;
+        }
+        if(Integer.parseInt(this.getGlobalStateKey(ApplicationTripSchema.GlobalState.AvailableSeats)) == 0) {
+            return TripStatus.Full;
+        }
+        return TripStatus.Available;
+    }
+
+    /**
+     * Check if the trip can be updated.
+     * A trip can be edited if no one is participating and the trip cannot start
+     *
+     * @return true if the Trip can be edited, false otherwise
+     */
+    public boolean isEditable() {
+        int maxSeats = Integer.parseInt(this.getGlobalStateKey(ApplicationTripSchema.GlobalState.MaxParticipants));
+        int availableSeats = Integer.parseInt(this.getGlobalStateKey(ApplicationTripSchema.GlobalState.AvailableSeats));
+
+        return !this.canStart() && maxSeats == availableSeats;
+    }
+
+    /**
+     * Check if the user is participating.
+     * Requires the LocalState to be set
+     *
+     * @return true if the LocalState is participating, false otherwise
+     */
+    public boolean isParticipating() {
+        String isParticipating = this.getLocalStateKey(LocalState.IsParticipating);
+        return Objects.equals(isParticipating, "1");
+    }
+
     public String getGlobalStateKey(GlobalState key) {
+        if(this.globalState == null) {
+            return null;
+        }
         return this.globalState.getOrDefault(key.getValue(), null);
     }
 
     public String getLocalStateKey(LocalState key) {
+        if(this.localState == null) {
+            return null;
+        }
         return this.localState.getOrDefault(key.getValue(), null);
     }
 
@@ -134,26 +202,17 @@ public class TripModel implements TripSchema {
         return globalState;
     }
 
-    public void setGlobalState(HashMap<String, String> globalState) {
-        this.globalState = globalState;
-    }
-
-    public HashMap<String, String> getLocalState() {
-        return localState;
-    }
-
-    public void setLocalState(HashMap<String, String> localState) {
-        this.localState = localState;
-    }
-
     /**
      * Read the LocalState StateSchema of the application
      *
      * @param application
      */
-    public void readLocalState(ApplicationLocalState application) {
+    public void setLocalState(ApplicationLocalState application) {
         if(application != null) {
             this.localState = readState(application.keyValue);
+        }
+        else {
+            this.localState = null;
         }
     }
 
@@ -162,7 +221,7 @@ public class TripModel implements TripSchema {
      *
      * @param application
      */
-    public void readGlobalState(Application application) {
+    public void setGlobalState(Application application) {
         if(application.params != null && application.params.globalState != null) {
             this.globalState = readState(application.params.globalState);
         }
@@ -205,7 +264,7 @@ public class TripModel implements TripSchema {
      * @param key
      * @return true if the given StateSchema key is an Address, false otherwise
      */
-    public static boolean isAddress(String key) {
+    protected static boolean isAddress(String key) {
         return key.equals(GlobalState.Creator.getValue()) || key.equals(GlobalState.EscrowAddress.getValue());
     }
 }
