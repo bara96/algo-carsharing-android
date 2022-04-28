@@ -110,12 +110,25 @@ public class TripModel implements ApplicationTripSchema {
     }
 
     /**
+     * Check if the application trip is started
+     *
+     * @return true if the trip is started, false otherwise
+     */
+    public boolean isStarted(){
+        return Integer.parseInt(this.getGlobalStateKey(GlobalState.TripState)) == (ApplicationState.Started.getValue());
+    }
+
+    /**
      * Check if the application trip can start
      *
      * @return true if the trip can start, false otherwise
      */
     public boolean canStart() {
         if(this.isEmpty()) {
+            return false;
+        }
+        if(this.isStarted()) {
+            // trip is already started
             return false;
         }
 

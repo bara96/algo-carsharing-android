@@ -41,6 +41,7 @@ public class TripActivity extends AccountBasedActivity {
         Leave,
         Update,
         Locked,
+        Start,
     }
 
     @Override
@@ -73,12 +74,6 @@ public class TripActivity extends AccountBasedActivity {
 
         });
 
-        binding.startBt.setOnClickListener(view -> {
-            if(application != null && application.canStart()) {
-                startTrip(application);
-            }
-        });
-
         binding.sendBt.setOnClickListener(v -> {
             try {
                 InsertTripModel tripData = null;
@@ -101,6 +96,8 @@ public class TripActivity extends AccountBasedActivity {
                     case Leave:
                         leaveTrip(application);
                         break;
+                    case Start:
+                        startTrip(application);
                 }
             }
             catch (Exception e) {
@@ -282,6 +279,10 @@ public class TripActivity extends AccountBasedActivity {
         }
         if(trip == null || trip.isEmpty()) {
             Snackbar.make(rootView, "Invalid trip", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+        if(!trip.canStart()) {
+            Snackbar.make(rootView, "Trip cannot start now", Snackbar.LENGTH_LONG).show();
             return;
         }
         if(account.getBalance() < TransactionsHelper.minFees) {
@@ -499,13 +500,17 @@ public class TripActivity extends AccountBasedActivity {
     private TripViewMode getTripViewMode(TripModel trip) {
         int availableSeats = Integer.parseInt(trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.AvailableSeats));
 
-        if(Integer.parseInt(trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.TripState)) == ApplicationTripSchema.ApplicationState.Started.getValue()) {
-            // the trip is already started, set the lock mode
+        if(trip.isStarted()) {
             return TripViewMode.Locked;
         }
 
         if(trip.creator().toString().equals(account.getAddress())) {
             // the account is the creator
+            if(trip.canStart()) {
+                // trip is about to start
+                return TripViewMode.Start;
+            }
+
             if(trip.isEditable()) {
                 // no one is participating, set editable
                 return TripViewMode.Update;
@@ -516,6 +521,10 @@ public class TripActivity extends AccountBasedActivity {
             }
         }
         else {
+            if(trip.canStart()) {
+                // trip is about to start
+                return TripViewMode.Locked;
+            }
             // the account is a participant, can either participate or leave
             if(availableSeats < 0) {
                 // no available seats
@@ -540,6 +549,7 @@ public class TripActivity extends AccountBasedActivity {
             case Join:
                 binding.sendBt.setText(getString(R.string.join));
                 binding.sendBt.setEnabled(true);
+                binding.sendBt.setVisibility(View.VISIBLE);
                 binding.saveDummyBt.setEnabled(false);
                 binding.saveDummyBt.setVisibility(View.GONE);
                 editEnabled = false;
@@ -547,6 +557,7 @@ public class TripActivity extends AccountBasedActivity {
             case Leave:
                 binding.sendBt.setText(getString(R.string.leave));
                 binding.sendBt.setEnabled(true);
+                binding.sendBt.setVisibility(View.VISIBLE);
                 binding.saveDummyBt.setEnabled(false);
                 binding.saveDummyBt.setVisibility(View.GONE);
                 editEnabled = false;
@@ -554,6 +565,7 @@ public class TripActivity extends AccountBasedActivity {
             case Create:
                 binding.sendBt.setText(getString(R.string.create));
                 binding.sendBt.setEnabled(true);
+                binding.sendBt.setVisibility(View.VISIBLE);
                 binding.saveDummyBt.setEnabled(true);
                 binding.saveDummyBt.setVisibility(View.VISIBLE);
                 editEnabled = true;
@@ -561,6 +573,7 @@ public class TripActivity extends AccountBasedActivity {
             case Update:
                 binding.sendBt.setText(getString(R.string.update));
                 binding.sendBt.setEnabled(true);
+                binding.sendBt.setVisibility(View.VISIBLE);
                 binding.saveDummyBt.setEnabled(false);
                 binding.saveDummyBt.setVisibility(View.GONE);
                 editEnabled = true;
@@ -573,15 +586,12 @@ public class TripActivity extends AccountBasedActivity {
                 binding.saveDummyBt.setVisibility(View.GONE);
                 editEnabled = false;
                 break;
-        }
-
-        if(application != null && application.canStart()) {
-            binding.startBt.setEnabled(true);
-            binding.startBt.setVisibility(View.VISIBLE);
-        }
-        else {
-            binding.startBt.setEnabled(false);
-            binding.startBt.setVisibility(View.GONE);
+            case Start:
+                binding.sendBt.setText(getString(R.string.start_trip));
+                binding.sendBt.setEnabled(true);
+                binding.sendBt.setVisibility(View.VISIBLE);
+                binding.saveDummyBt.setEnabled(false);
+                binding.saveDummyBt.setVisibility(View.GONE);
         }
 
         binding.creatorName.setEnabled(editEnabled);
@@ -600,7 +610,6 @@ public class TripActivity extends AccountBasedActivity {
             binding.progressBar.setVisibility(View.VISIBLE);
             binding.sendBt.setEnabled(false);
             binding.saveDummyBt.setEnabled(false);
-            binding.startBt.setEnabled(false);
         }
         else {
             setTripViewMode(currentMode);
