@@ -13,5 +13,6 @@
     <dimen name="margin_xsm">14dp</dimen>
     <dimen name="margin_sm">18dp</dimen>
     <dimen name="margin_md">24dp</dimen>
-    <dimen name="margin_lg">28dp</dimen>
+    <dimen name="margin_lg">30dp</dimen>
+    <dimen name="margin_xlg">36dp</dimen>
 </resources>

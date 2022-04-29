@@ -91,5 +91,6 @@
     <string name="microalgo">MicroAlgo</string>
     <string name="date_example">2022–05–10 15:00</string>
     <string name="cost_example">5000</string>
+    <string name="number_example">0</string>
     <string name="close">Close</string>
 </resources>

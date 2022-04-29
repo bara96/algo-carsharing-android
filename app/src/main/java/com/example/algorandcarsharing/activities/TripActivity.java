@@ -1,5 +1,7 @@
 package com.example.algorandcarsharing.activities;
 
+import static com.example.algorandcarsharing.models.TripModel.TripStatus.Finished;
+
 import android.os.Bundle;
 import android.view.View;
 
@@ -162,6 +164,7 @@ public class TripActivity extends AccountBasedActivity {
                             TripModel trip = new TripModel(result.application);
                             if (trip.isValid()) {
                                 application = trip;
+                                application.setLocalState(this.account.getAppLocalState(trip.id()));
                                 currentMode = getTripViewMode(trip);
 
                                 runOnUiThread(() -> {
@@ -547,6 +550,7 @@ public class TripActivity extends AccountBasedActivity {
     private void setTripViewMode(TripViewMode viewMode) {
         boolean editEnabled = false;
 
+        // set action buttons
         switch (viewMode) {
             case Join:
                 binding.sendBt.setText(getString(R.string.join));
@@ -602,6 +606,49 @@ public class TripActivity extends AccountBasedActivity {
                 binding.cardLayout.setVisibility(View.VISIBLE);
         }
 
+        if(application != null && !application.isEmpty()) {
+            // set status card info
+            int maxSeats = Integer.parseInt(application.getGlobalStateKey(ApplicationTripSchema.GlobalState.MaxParticipants));
+            int availableSeats = Integer.parseInt(application.getGlobalStateKey(ApplicationTripSchema.GlobalState.AvailableSeats));
+            int participants = maxSeats - availableSeats;
+            binding.participants.setText(String.format("%s / %s Participants", participants, maxSeats));
+
+            switch (application.getStatus()) {
+                case Finished:
+                    binding.status.setText(getString(R.string.status_finished));
+                    binding.status.setTextColor(getColor(R.color.blue));
+                    break;
+                case Starting:
+                    binding.status.setText(getString(R.string.status_starting));
+                    binding.status.setTextColor(getColor(R.color.blue));
+                    break;
+                case Available:
+                    if(application.isParticipating()) {
+                        binding.status.setText(getString(R.string.status_joined));
+                        binding.status.setTextColor(getColor(R.color.yellow));
+                    }
+                    else {
+                        binding.status.setText(getString(R.string.status_available));
+                        binding.status.setTextColor(getColor(R.color.green));
+                    }
+                    break;
+                case Full:
+                    if(application.isParticipating()) {
+                        binding.status.setText(getString(R.string.status_joined));
+                        binding.status.setTextColor(getColor(R.color.yellow));
+                    }
+                    else {
+                        binding.status.setText(getString(R.string.status_full));
+                        binding.status.setTextColor(getColor(R.color.red));
+                    }
+                    break;
+                default:
+                    binding.status.setText(getString(R.string.status_unknown));
+                    break;
+            }
+        }
+
+        // set trip info
         binding.creatorName.setEnabled(editEnabled);
         binding.startAddress.setEnabled(editEnabled);
         binding.endAddress.setEnabled(editEnabled);

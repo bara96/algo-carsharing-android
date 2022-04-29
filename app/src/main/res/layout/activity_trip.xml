@@ -35,10 +35,10 @@
                     android:background="@null"
                     android:contentDescription="@string/close"
                     android:translationZ="10dp"
-                    android:paddingTop="@dimen/margin_lg"
+                    android:paddingTop="@dimen/margin_xlg"
                     android:paddingBottom="@dimen/margin_md"
                     android:paddingStart="@dimen/margin_md"
-                    android:paddingEnd="@dimen/margin_sm"
+                    android:paddingEnd="@dimen/margin_md"
                     app:srcCompat="@drawable/ic_baseline_close_24" />
 
                 <androidx.cardview.widget.CardView
@@ -76,6 +76,7 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/participants"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="2"
@@ -100,6 +101,7 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/status"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="2"
@@ -319,7 +321,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/cost_layout"
+                android:id="@+id/info_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -327,53 +329,88 @@
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/end_datetime_layout">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:textSize="@dimen/text_medium"
-                    android:text="@string/trip_cost_label"
-                    android:textStyle="bold" />
-
-                <EditText
-                    android:id="@+id/cost"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:minHeight="48dp"
-                    android:hint="@string/trip_cost"
-                    android:inputType="number"
-                    />
+                    android:orientation="horizontal"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toBottomOf="parent"
+                    >
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintTop_toBottomOf="parent"
+                        >
 
-            </LinearLayout>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:textSize="@dimen/text_medium"
+                            android:text="@string/trip_cost_label"
+                            android:textStyle="bold" />
 
-            <LinearLayout
-                android:id="@+id/available_seats_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginTop="@dimen/margin_sm"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/cost_layout">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:orientation="horizontal"
+                            app:layout_constraintLeft_toLeftOf="parent"
+                            app:layout_constraintTop_toBottomOf="parent"
+                            >
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:textSize="@dimen/text_medium"
-                    android:text="@string/availability_label"
-                    android:textStyle="bold" />
+                            <EditText
+                                android:id="@+id/cost"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:ems="10"
+                                android:minHeight="48dp"
+                                android:hint="@string/trip_cost"
+                                android:inputType="number"
+                                />
 
-                <EditText
-                    android:id="@+id/available_seats"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:minHeight="48dp"
-                    android:hint="@string/available_seats"
-                    android:inputType="number"
-                    />
+                            <ImageView
+                                android:layout_width="22sp"
+                                android:layout_height="22sp"
+                                android:layout_marginEnd="@dimen/margin_xsm"
+                                android:gravity="center"
+                                android:src="@drawable/algo_logo"
+                                android:contentDescription="@string/microalgo" />
+                        </LinearLayout>
+                    </LinearLayout>
 
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintTop_toBottomOf="parent"
+                        >
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:textSize="@dimen/text_medium"
+                            android:text="@string/availability_label"
+                            android:textStyle="bold" />
+
+                        <EditText
+                            android:id="@+id/available_seats"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ems="10"
+                            android:minHeight="48dp"
+                            android:hint="@string/number_example"
+                            android:inputType="number"
+                            />
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
 
             <Button
@@ -386,7 +423,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/available_seats_layout" />
+                app:layout_constraintTop_toBottomOf="@id/info_layout" />
 
             <Button
                 android:id="@+id/save_dummy_bt"

@@ -121,8 +121,14 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.ViewHolder> {
                 }
                 break;
             case Full:
-                viewHolder.status.setText(context.getString(R.string.status_full));
-                viewHolder.status.setTextColor(context.getColor(R.color.red));
+                if(trip.isParticipating()) {
+                    viewHolder.status.setText(context.getString(R.string.status_joined));
+                    viewHolder.status.setTextColor(context.getColor(R.color.yellow));
+                }
+                else {
+                    viewHolder.status.setText(context.getString(R.string.status_full));
+                    viewHolder.status.setTextColor(context.getColor(R.color.red));
+                }
                 break;
             default:
                 viewHolder.status.setText(context.getString(R.string.status_unknown));
