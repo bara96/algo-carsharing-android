@@ -11,7 +11,8 @@
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_editor_absoluteX="-16dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -24,8 +25,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                >
+                app:layout_constraintTop_toTopOf="parent">
 
                 <ImageButton
                     android:id="@+id/close_card"
@@ -34,38 +34,36 @@
                     android:layout_gravity="end|top"
                     android:background="@null"
                     android:contentDescription="@string/close"
-                    android:translationZ="10dp"
-                    android:paddingTop="@dimen/margin_xlg"
-                    android:paddingBottom="@dimen/margin_md"
                     android:paddingStart="@dimen/margin_md"
+                    android:paddingTop="@dimen/margin_xlg"
                     android:paddingEnd="@dimen/margin_md"
+                    android:paddingBottom="@dimen/margin_md"
+                    android:translationZ="10dp"
                     app:srcCompat="@drawable/ic_baseline_close_24" />
 
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/margin_xsm"
+                    app:cardBackgroundColor="@color/white"
+                    app:cardCornerRadius="20dp"
                     app:cardElevation="6dp"
                     app:cardMaxElevation="6dp"
-                    app:cardCornerRadius="20dp"
-                    app:cardBackgroundColor="@color/white"
                     app:cardUseCompatPadding="true">
 
                     <androidx.constraintlayout.widget.ConstraintLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_margin="@dimen/margin_sm"
-                        >
+                        android:layout_margin="@dimen/margin_sm">
 
                         <LinearLayout
                             android:id="@+id/card_participants_layout"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
                             android:layout_marginBottom="@dimen/margin_xsm"
+                            android:orientation="horizontal"
                             app:layout_constraintLeft_toLeftOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
-                            >
+                            app:layout_constraintTop_toTopOf="parent">
 
                             <TextView
                                 android:layout_width="0dp"
@@ -106,8 +104,8 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="2"
                                 android:gravity="center"
-                                android:textAllCaps="true"
-                                android:text="@string/trip_status" />
+                                android:text="@string/trip_status"
+                                android:textAllCaps="true" />
                         </LinearLayout>
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -128,8 +126,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:textSize="@dimen/text_medium"
                     android:text="@string/creator_name_label"
+                    android:textSize="@dimen/text_medium"
                     android:textStyle="bold" />
 
                 <EditText
@@ -148,8 +146,8 @@
                 android:id="@+id/start_address_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
                 android:layout_marginTop="@dimen/margin_sm"
+                android:orientation="vertical"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/creator_layout">
 
@@ -157,20 +155,19 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:textSize="@dimen/text_medium"
                     android:text="@string/start_address_label"
+                    android:textSize="@dimen/text_medium"
                     android:textStyle="bold" />
 
                 <EditText
                     android:id="@+id/start_address"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:autofillHints="postalAddress"
                     android:ems="10"
-                    android:minHeight="48dp"
                     android:hint="@string/start_address"
                     android:inputType="textPostalAddress"
-                    android:autofillHints="postalAddress"
-                    />
+                    android:minHeight="48dp" />
 
             </LinearLayout>
 
@@ -178,8 +175,8 @@
                 android:id="@+id/end_address_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
                 android:layout_marginTop="@dimen/margin_sm"
+                android:orientation="vertical"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/start_address_layout">
 
@@ -187,19 +184,19 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:textSize="@dimen/text_medium"
                     android:text="@string/end_address_label"
+                    android:textSize="@dimen/text_medium"
                     android:textStyle="bold" />
 
                 <EditText
                     android:id="@+id/end_address"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:autofillHints="postalAddress"
                     android:ems="10"
-                    android:minHeight="48dp"
                     android:hint="@string/end_address"
                     android:inputType="textPostalAddress"
-                    android:autofillHints="postalAddress" />
+                    android:minHeight="48dp" />
 
             </LinearLayout>
 
@@ -207,8 +204,8 @@
                 android:id="@+id/start_datetime_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
                 android:layout_marginTop="@dimen/margin_sm"
+                android:orientation="vertical"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/end_address_layout">
 
@@ -216,29 +213,29 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:textSize="@dimen/text_medium"
                     android:text="@string/start_date_label"
+                    android:textSize="@dimen/text_medium"
                     android:textStyle="bold" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    app:layout_constraintLeft_toLeftOf="parent">
 
                     <EditText
                         android:id="@+id/start_date"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:ems="10"
-                        android:minHeight="48dp"
-                        android:hint="@string/date"
-                        android:inputType="date"
                         android:clickable="false"
                         android:cursorVisible="false"
+                        android:ems="10"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
+                        android:hint="@string/date"
+                        android:inputType="date"
+                        android:minHeight="48dp"
                         app:layout_constraintLeft_toLeftOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/end_address" />
 
@@ -247,14 +244,14 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:ems="10"
-                        android:minHeight="48dp"
-                        android:hint="@string/time"
-                        android:inputType="time"
                         android:clickable="false"
                         android:cursorVisible="false"
+                        android:ems="10"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
+                        android:hint="@string/time"
+                        android:inputType="time"
+                        android:minHeight="48dp"
                         app:layout_constraintLeft_toLeftOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/start_date" />
                 </LinearLayout>
@@ -265,8 +262,8 @@
                 android:id="@+id/end_datetime_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
                 android:layout_marginTop="@dimen/margin_sm"
+                android:orientation="vertical"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/start_datetime_layout">
 
@@ -274,30 +271,30 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:textSize="@dimen/text_medium"
                     android:text="@string/end_date_label"
+                    android:textSize="@dimen/text_medium"
                     android:textStyle="bold" />
 
                 <LinearLayout
                     android:id="@+id/end_datetime_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    app:layout_constraintLeft_toLeftOf="parent">
 
                     <EditText
                         android:id="@+id/end_date"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:ems="10"
-                        android:minHeight="48dp"
-                        android:hint="@string/date"
-                        android:inputType="date"
                         android:clickable="false"
                         android:cursorVisible="false"
+                        android:ems="10"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
+                        android:hint="@string/date"
+                        android:inputType="date"
+                        android:minHeight="48dp"
                         app:layout_constraintLeft_toLeftOf="parent"
                         app:layout_constraintTop_toBottomOf="parent" />
 
@@ -306,14 +303,14 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:ems="10"
-                        android:minHeight="48dp"
-                        android:hint="@string/time"
-                        android:inputType="time"
                         android:clickable="false"
                         android:cursorVisible="false"
+                        android:ems="10"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
+                        android:hint="@string/time"
+                        android:inputType="time"
+                        android:minHeight="48dp"
                         app:layout_constraintLeft_toRightOf="@id/end_date"
                         app:layout_constraintTop_toBottomOf="parent" />
                 </LinearLayout>
@@ -324,8 +321,8 @@
                 android:id="@+id/info_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
                 android:layout_marginTop="@dimen/margin_sm"
+                android:orientation="vertical"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/end_datetime_layout">
 
@@ -334,23 +331,22 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     app:layout_constraintLeft_toLeftOf="parent"
-                    app:layout_constraintTop_toBottomOf="parent"
-                    >
+                    app:layout_constraintTop_toBottomOf="parent">
+
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical"
                         app:layout_constraintLeft_toLeftOf="parent"
-                        app:layout_constraintTop_toBottomOf="parent"
-                        >
+                        app:layout_constraintTop_toBottomOf="parent">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:gravity="center"
-                            android:textSize="@dimen/text_medium"
                             android:text="@string/trip_cost_label"
+                            android:textSize="@dimen/text_medium"
                             android:textStyle="bold" />
 
                         <LinearLayout
@@ -359,8 +355,7 @@
                             android:gravity="center"
                             android:orientation="horizontal"
                             app:layout_constraintLeft_toLeftOf="parent"
-                            app:layout_constraintTop_toBottomOf="parent"
-                            >
+                            app:layout_constraintTop_toBottomOf="parent">
 
                             <EditText
                                 android:id="@+id/cost"
@@ -368,18 +363,17 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:ems="10"
-                                android:minHeight="48dp"
                                 android:hint="@string/trip_cost"
                                 android:inputType="number"
-                                />
+                                android:minHeight="48dp" />
 
                             <ImageView
                                 android:layout_width="22sp"
                                 android:layout_height="22sp"
                                 android:layout_marginEnd="@dimen/margin_xsm"
+                                android:contentDescription="@string/microalgo"
                                 android:gravity="center"
-                                android:src="@drawable/algo_logo"
-                                android:contentDescription="@string/microalgo" />
+                                android:src="@drawable/algo_logo" />
                         </LinearLayout>
                     </LinearLayout>
 
@@ -389,15 +383,14 @@
                         android:layout_weight="1"
                         android:orientation="vertical"
                         app:layout_constraintLeft_toLeftOf="parent"
-                        app:layout_constraintTop_toBottomOf="parent"
-                        >
+                        app:layout_constraintTop_toBottomOf="parent">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:gravity="center"
-                            android:textSize="@dimen/text_medium"
                             android:text="@string/availability_label"
+                            android:textSize="@dimen/text_medium"
                             android:textStyle="bold" />
 
                         <EditText
@@ -405,38 +398,50 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:ems="10"
-                            android:minHeight="48dp"
                             android:hint="@string/number_example"
                             android:inputType="number"
-                            />
+                            android:minHeight="48dp" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
 
-            <Button
-                android:id="@+id/send_bt"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:layout_margin="@dimen/margin_xsm"
-                android:text="@string/create"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/info_layout" />
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/margin_sm"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/info_layout"
+                android:gravity="center"
+                >
 
-            <Button
-                android:id="@+id/save_dummy_bt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:layout_margin="@dimen/margin_xsm"
-                android:text="@string/create_dummy_trip"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/send_bt" />
+                <Button
+                    android:id="@+id/send_bt"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/margin_xsm"
+                    android:layout_weight="1"
+                    android:text="@string/create"
+                    />
 
+                <Button
+                    android:id="@+id/delete_bt"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/margin_xsm"
+                    android:layout_weight="1"
+                    android:text="@string/delete_trip"
+                    />
+
+                <Button
+                    android:id="@+id/save_dummy_bt"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/margin_xsm"
+                    android:layout_weight="1"
+                    android:text="@string/create_dummy_trip"
+                    />
+            </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 

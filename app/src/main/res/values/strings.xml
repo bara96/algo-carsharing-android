@@ -49,13 +49,14 @@
     <string name="menu_trips_create">Create Trip</string>
     <string name="insert_trip_data">Insert Trip Data</string>
     <string name="your_trips">Your Trips</string>
-    <string name="start_trip">Start Trip</string>
+    <string name="end_trip">End Trip</string>
+    <string name="delete_trip">Delete Trip</string>
     <string name="create_dummy_trip">Create dummy trip</string>
 
     <!-- Trip Status Strings -->
     <string name="status_available">Available</string>
     <string name="status_full">Full</string>
-    <string name="status_starting">Starting</string>
+    <string name="status_started">Started</string>
     <string name="status_finished">Finished</string>
     <string name="status_joined">Joined</string>
     <string name="status_edit">Edit</string>

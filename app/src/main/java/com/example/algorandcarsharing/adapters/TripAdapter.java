@@ -18,7 +18,6 @@ import com.example.algorandcarsharing.models.TripModel;
 import com.example.algorandcarsharing.models.ApplicationTripSchema;
 
 import java.util.List;
-import java.util.Objects;
 
 public class TripAdapter extends RecyclerView.Adapter<TripAdapter.ViewHolder> {
 
@@ -96,6 +95,7 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.ViewHolder> {
         viewHolder.title.setText(String.format("Trip n° %s", id));
         viewHolder.availability.setText(String.format("%s / %s Seats", availability, maxParticipants));
         viewHolder.startAddress.setText(startAddress);
+        viewHolder.startAddress.setText(startAddress);
         viewHolder.startDate.setText(startDate);
         viewHolder.endAddress.setText(endAddress);
         viewHolder.endDate.setText(endDate);
@@ -106,8 +106,8 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.ViewHolder> {
                 viewHolder.status.setText(context.getString(R.string.status_finished));
                 viewHolder.status.setTextColor(context.getColor(R.color.blue));
                 break;
-            case Starting:
-                viewHolder.status.setText(context.getString(R.string.status_starting));
+            case Started:
+                viewHolder.status.setText(context.getString(R.string.status_started));
                 viewHolder.status.setTextColor(context.getColor(R.color.blue));
                 break;
             case Available:

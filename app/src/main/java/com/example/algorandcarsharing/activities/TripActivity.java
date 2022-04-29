@@ -1,7 +1,5 @@
 package com.example.algorandcarsharing.activities;
 
-import static com.example.algorandcarsharing.models.TripModel.TripStatus.Finished;
-
 import android.os.Bundle;
 import android.view.View;
 
@@ -22,7 +20,6 @@ import com.example.algorandcarsharing.services.IndexerService;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
@@ -37,13 +34,23 @@ public class TripActivity extends AccountBasedActivity {
 
     private ApplicationService applicationService;
 
+    private enum TripActionMode {
+        Create,
+        Join,
+        Leave,
+        Update,
+        Delete,
+        End,
+    }
+
     private enum TripViewMode {
         Create,
         Join,
         Leave,
         Update,
         Locked,
-        Start,
+        Started,
+        Finished,
     }
 
     @Override
@@ -78,18 +85,19 @@ public class TripActivity extends AccountBasedActivity {
 
         binding.closeCard.setOnClickListener(view -> binding.cardLayout.setVisibility(View.GONE));
 
+        binding.deleteBt.setOnClickListener(view -> deleteTrip(application));
         binding.sendBt.setOnClickListener(v -> {
             try {
                 InsertTripModel tripData = null;
                 switch (currentMode) {
                     case Create:
-                        tripData = validate();
+                        tripData = InsertTripModel.validate(rootView);
                         if(tripData != null) {
                             createTrip(tripData);
                         }
                         break;
                     case Update:
-                        tripData = validate();
+                        tripData = InsertTripModel.validate(rootView);
                         if(tripData != null) {
                             updateTrip(tripData);
                         }
@@ -100,8 +108,8 @@ public class TripActivity extends AccountBasedActivity {
                     case Leave:
                         leaveTrip(application);
                         break;
-                    case Start:
-                        startTrip(application);
+                    case Started:
+                        endTrip(application);
                 }
             }
             catch (Exception e) {
@@ -152,6 +160,7 @@ public class TripActivity extends AccountBasedActivity {
         if(appId == null) {
             return;
         }
+
         try {
             setLoading(true);
             setTitle(String.format("Trip %s", appId));
@@ -191,18 +200,14 @@ public class TripActivity extends AccountBasedActivity {
     }
 
     private void createTrip(InsertTripModel tripData) {
-        if(account.getAddress() == null) {
-            Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
-            return;
-        }
         if(tripData == null) {
             Snackbar.make(rootView, "Empty trip data", Snackbar.LENGTH_LONG).show();
             return;
         }
-        if(account.getBalance() < (TransactionsHelper.escrowMinBalance + TransactionsHelper.minFees)) {
-            Snackbar.make(rootView, String.format("You need at least %s MicroAlgo to create a trip", (TransactionsHelper.escrowMinBalance + TransactionsHelper.minFees)), Snackbar.LENGTH_LONG).show();
+        if(!this.canPerformAction(TripActionMode.Create)) {
             return;
         }
+
         try {
             setLoading(true);
             CompletableFuture.supplyAsync(applicationService.createApplication(getApplicationContext(), account.getAccount(), tripData))
@@ -235,22 +240,14 @@ public class TripActivity extends AccountBasedActivity {
     }
 
     private void updateTrip(InsertTripModel tripData) {
-        if(account.getAddress() == null) {
-            Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
-            return;
-        }
         if(tripData == null) {
             Snackbar.make(rootView, "Empty trip data", Snackbar.LENGTH_LONG).show();
             return;
         }
-        if(appId == null) {
-            Snackbar.make(rootView, "Invalid app id", Snackbar.LENGTH_LONG).show();
+        if(!this.canPerformAction(TripActionMode.Update)) {
             return;
         }
-        if(account.getBalance() < TransactionsHelper.minFees) {
-            Snackbar.make(rootView, String.format("You need at least %s MicroAlgo to update the trip", TransactionsHelper.minFees), Snackbar.LENGTH_LONG).show();
-            return;
-        }
+
         try {
             setLoading(true);
             CompletableFuture.supplyAsync(applicationService.updateApplication(appId, account.getAccount(), tripData))
@@ -277,23 +274,48 @@ public class TripActivity extends AccountBasedActivity {
         }
     }
 
-    private void startTrip(TripModel trip) {
-        if(account.getAddress() == null) {
-            Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
-            return;
-        }
+    private void deleteTrip(TripModel trip) {
         if(trip == null || trip.isEmpty()) {
             Snackbar.make(rootView, "Invalid trip", Snackbar.LENGTH_LONG).show();
             return;
         }
-        if(!trip.canStart()) {
-            Snackbar.make(rootView, "Trip cannot start now", Snackbar.LENGTH_LONG).show();
+        if(!this.canPerformAction(TripActionMode.Delete)) {
             return;
         }
-        if(account.getBalance() < TransactionsHelper.minFees) {
-            Snackbar.make(rootView, String.format("You need at least %s MicroAlgo to start the trip", TransactionsHelper.minFees), Snackbar.LENGTH_LONG).show();
+
+        try {
+            setLoading(true);
+            CompletableFuture.supplyAsync(applicationService.deleteApplication(trip, account.getAccount()))
+                    .thenAcceptAsync(result -> runOnUiThread(() -> {
+                        Snackbar.make(rootView, String.format("Deleted trip with id: %s", appId), Snackbar.LENGTH_LONG).show();
+                        this.finish();
+                    }))
+                    .exceptionally(e -> {
+                        LogHelper.error("DeleteTrip", e);
+                        runOnUiThread(() ->Snackbar.make(rootView, String.format("Error performing the request: %s", e.getMessage()), Snackbar.LENGTH_LONG).show());
+                        return null;
+                    })
+                    .handle((ok, ex) -> {
+                        runOnUiThread(() -> setLoading(false));
+                        return ok;
+                    });
+        }
+        catch (Exception e) {
+            setLoading(false);
+            LogHelper.error("DeleteTrip", e);
+            Snackbar.make(rootView, String.format("Error performing the request: %s", e.getMessage()), Snackbar.LENGTH_LONG).show();
+        }
+    }
+
+    private void endTrip(TripModel trip) {
+        if(trip == null || trip.isEmpty()) {
+            Snackbar.make(rootView, "Invalid trip", Snackbar.LENGTH_LONG).show();
             return;
         }
+        if(!this.canPerformAction(TripActionMode.End)) {
+            return;
+        }
+
         try {
             setLoading(true);
             CompletableFuture.supplyAsync(applicationService.startTrip(trip, account.getAccount()))
@@ -323,18 +345,14 @@ public class TripActivity extends AccountBasedActivity {
     }
 
     private void joinTrip(TripModel trip) {
-        if(account.getAddress() == null) {
-            Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
-            return;
-        }
         if(trip == null || trip.isEmpty()) {
             Snackbar.make(rootView, "Invalid trip", Snackbar.LENGTH_LONG).show();
             return;
         }
-        if(account.getBalance() < (trip.cost() + TransactionsHelper.minFees)) {
-            Snackbar.make(rootView, String.format("You need at least %s MicroAlgo to join the trip", (trip.cost() + TransactionsHelper.minFees)), Snackbar.LENGTH_LONG).show();
+        if(!this.canPerformAction(TripActionMode.Join)) {
             return;
         }
+
         try {
             setLoading(true);
             CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
@@ -368,14 +386,10 @@ public class TripActivity extends AccountBasedActivity {
             Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
             return;
         }
-        if(trip == null || trip.isEmpty()) {
-            Snackbar.make(rootView, "Invalid trip", Snackbar.LENGTH_LONG).show();
+        if(!this.canPerformAction(TripActionMode.Leave)) {
             return;
         }
-        if(account.getBalance() < TransactionsHelper.minFees) {
-            Snackbar.make(rootView, String.format("You need at least %s MicroAlgo to leave the trip", TransactionsHelper.minFees), Snackbar.LENGTH_LONG).show();
-            return;
-        }
+
         try {
             setLoading(true);
             CompletableFuture.supplyAsync(accountService.getAccountInfo(account.getAddress()))
@@ -406,68 +420,71 @@ public class TripActivity extends AccountBasedActivity {
         }
     }
 
-    private InsertTripModel validate() throws ParseException {
-            String creatorName = String.valueOf(binding.creatorName.getText()).trim();
-            String startAddress = String.valueOf(binding.startAddress.getText()).trim();
-            String endAddress = String.valueOf(binding.endAddress.getText()).trim();
-            String startDate = String.valueOf(binding.startDate.getText()).trim();
-            String startTime = String.valueOf(binding.startTime.getText()).trim();
-            String endDate = String.valueOf(binding.endDate.getText()).trim();
-            String endTime = String.valueOf(binding.endTime.getText()).trim();
+    private boolean canPerformAction(TripActionMode mode) {
+        Long minBalance = TransactionsHelper.minFees;
 
-            int cost = Integer.parseInt(String.valueOf(binding.cost.getText()));
-            int availableSeats = Integer.parseInt(String.valueOf(binding.availableSeats.getText()));
+        if(account.getAddress() == null) {
+            Snackbar.make(rootView, "Please set an account address", Snackbar.LENGTH_LONG).show();
+            return false;
+        }
 
-            Date startDatetime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(startDate + " " + startTime);
-            Date endDatetime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(endDate + " " + endTime);
-            Date now = new Date();
+        if(mode == TripActionMode.Create) {
+            minBalance += TransactionsHelper.escrowMinBalance;
+        }
+        else {
+            if(appId == null || application == null) {
+                Snackbar.make(rootView, "Invalid app id", Snackbar.LENGTH_LONG).show();
+                return false;
+            }
+        }
 
-            if (creatorName.length() <= 0) {
-                Snackbar.make(rootView, "Creator Name is required", Snackbar.LENGTH_LONG).show();
-                return null;
+        if(mode == TripActionMode.Update || mode == TripActionMode.Delete || mode == TripActionMode.End) {
+            if(!account.isCreator(appId)) {
+                Snackbar.make(rootView, "You are not the creator", Snackbar.LENGTH_LONG).show();
+                return false;
             }
 
-            if (startAddress.length() <= 0) {
-                Snackbar.make(rootView, "Departure Address is required", Snackbar.LENGTH_LONG).show();
-                return null;
+            switch (mode) {
+                case Update:
+                    if(!application.canUpdate()) {
+                        Snackbar.make(rootView, "You cannot update the application now", Snackbar.LENGTH_LONG).show();
+                        return false;
+                    }
+                    break;
+                case Delete:
+                    if(!application.canDelete()) {
+                        Snackbar.make(rootView, "You cannot delete the application now", Snackbar.LENGTH_LONG).show();
+                        return false;
+                    }
+                    break;
+                case End:
+                    if(!application.canEnd()) {
+                        Snackbar.make(rootView, "Trip cannot end now", Snackbar.LENGTH_LONG).show();
+                        return false;
+                    }
+                    break;
             }
-
-            if (endAddress.length() <= 0) {
-                Snackbar.make(rootView, "Arrival Address is required", Snackbar.LENGTH_LONG).show();
-                return null;
+        }
+        else if(mode == TripActionMode.Join) {
+            minBalance += application.cost();
+            if(application.isParticipating()) {
+                Snackbar.make(rootView, "You are already participating the trip", Snackbar.LENGTH_LONG).show();
+                return false;
             }
-
-            if (startDatetime == null) {
-                Snackbar.make(rootView, "Start Date is invalid", Snackbar.LENGTH_LONG).show();
-                return null;
+        }
+        else if(mode == TripActionMode.Leave) {
+            if(!application.isParticipating()) {
+                Snackbar.make(rootView, "You are not participating the trip yet", Snackbar.LENGTH_LONG).show();
+                return false;
             }
+        }
 
-            if (endDatetime == null) {
-                Snackbar.make(rootView, "End Date is required", Snackbar.LENGTH_LONG).show();
-                return null;
-            }
+        if(account.getBalance() < minBalance) {
+            Snackbar.make(rootView, String.format("You need at least %s MicroAlgo to perform the request", minBalance), Snackbar.LENGTH_LONG).show();
+            return false;
+        }
 
-            if(startDatetime.getTime() < now.getTime()) {
-                Snackbar.make(rootView, "Start Date must be greater than now", Snackbar.LENGTH_LONG).show();
-                return null;
-            }
-
-            if(endDatetime.getTime() < startDatetime.getTime()) {
-                Snackbar.make(rootView, "End Date must be greater than Start Date", Snackbar.LENGTH_LONG).show();
-                return null;
-            }
-
-            if (cost < 1000) {
-                Snackbar.make(rootView, "Cost cannot be less than 1000", Snackbar.LENGTH_LONG).show();
-                return null;
-            }
-
-            if (availableSeats < 0) {
-                Snackbar.make(rootView, "Seats cannot be 0", Snackbar.LENGTH_LONG).show();
-                return null;
-            }
-
-            return new InsertTripModel(creatorName, startAddress, endAddress, startDatetime, endDatetime, cost, availableSeats);
+        return true;
     }
 
     private void setTripOnView(TripModel trip) {
@@ -503,18 +520,18 @@ public class TripActivity extends AccountBasedActivity {
     private TripViewMode getTripViewMode(TripModel trip) {
         int availableSeats = Integer.parseInt(trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.AvailableSeats));
 
-        if(trip.isStarted()) {
-            return TripViewMode.Locked;
+        if(trip.isEnded()) {
+            return TripViewMode.Finished;
         }
 
         if(trip.creator().toString().equals(account.getAddress())) {
             // the account is the creator
-            if(trip.canStart()) {
+            if(trip.canEnd()) {
                 // trip is about to start
-                return TripViewMode.Start;
+                return TripViewMode.Started;
             }
 
-            if(trip.isEditable()) {
+            if(trip.canUpdate()) {
                 // no one is participating, set editable
                 return TripViewMode.Update;
             }
@@ -525,7 +542,7 @@ public class TripActivity extends AccountBasedActivity {
             }
         }
         else {
-            if(trip.canStart()) {
+            if(trip.canEnd()) {
                 // trip is about to start
                 return TripViewMode.Locked;
             }
@@ -549,6 +566,15 @@ public class TripActivity extends AccountBasedActivity {
 
     private void setTripViewMode(TripViewMode viewMode) {
         boolean editEnabled = false;
+        LogHelper.log("ViewMode", viewMode.toString());
+
+        // delete action hidden by default
+        binding.deleteBt.setEnabled(false);
+        binding.deleteBt.setVisibility(View.GONE);
+
+        // create dummy action hidden by default
+        binding.saveDummyBt.setEnabled(false);
+        binding.saveDummyBt.setVisibility(View.GONE);
 
         // set action buttons
         switch (viewMode) {
@@ -556,8 +582,6 @@ public class TripActivity extends AccountBasedActivity {
                 binding.sendBt.setText(getString(R.string.join));
                 binding.sendBt.setEnabled(true);
                 binding.sendBt.setVisibility(View.VISIBLE);
-                binding.saveDummyBt.setEnabled(false);
-                binding.saveDummyBt.setVisibility(View.GONE);
                 binding.cardLayout.setVisibility(View.VISIBLE);
                 editEnabled = false;
                 break;
@@ -565,8 +589,6 @@ public class TripActivity extends AccountBasedActivity {
                 binding.sendBt.setText(getString(R.string.leave));
                 binding.sendBt.setEnabled(true);
                 binding.sendBt.setVisibility(View.VISIBLE);
-                binding.saveDummyBt.setEnabled(false);
-                binding.saveDummyBt.setVisibility(View.GONE);
                 binding.cardLayout.setVisibility(View.VISIBLE);
                 editEnabled = false;
                 break;
@@ -583,27 +605,36 @@ public class TripActivity extends AccountBasedActivity {
                 binding.sendBt.setText(getString(R.string.update));
                 binding.sendBt.setEnabled(true);
                 binding.sendBt.setVisibility(View.VISIBLE);
-                binding.saveDummyBt.setEnabled(false);
-                binding.saveDummyBt.setVisibility(View.GONE);
                 binding.cardLayout.setVisibility(View.VISIBLE);
+                if(account != null && account.isCreator(appId)) {
+                    binding.deleteBt.setEnabled(true);
+                    binding.deleteBt.setVisibility(View.VISIBLE);
+                }
                 editEnabled = true;
                 break;
             case Locked:
                 binding.sendBt.setText(getString(R.string.update));
                 binding.sendBt.setEnabled(false);
                 binding.sendBt.setVisibility(View.GONE);
-                binding.saveDummyBt.setEnabled(false);
-                binding.saveDummyBt.setVisibility(View.GONE);
                 binding.cardLayout.setVisibility(View.VISIBLE);
                 editEnabled = false;
                 break;
-            case Start:
-                binding.sendBt.setText(getString(R.string.start_trip));
+            case Started:
+                binding.sendBt.setText(getString(R.string.end_trip));
                 binding.sendBt.setEnabled(true);
                 binding.sendBt.setVisibility(View.VISIBLE);
-                binding.saveDummyBt.setEnabled(false);
-                binding.saveDummyBt.setVisibility(View.GONE);
                 binding.cardLayout.setVisibility(View.VISIBLE);
+                break;
+            case Finished:
+                binding.sendBt.setEnabled(false);
+                binding.sendBt.setVisibility(View.GONE);
+                binding.cardLayout.setVisibility(View.VISIBLE);
+                if(account != null && account.isCreator(appId)) {
+                    binding.deleteBt.setEnabled(true);
+                    binding.deleteBt.setVisibility(View.VISIBLE);
+                }
+                editEnabled = false;
+                break;
         }
 
         if(application != null && !application.isEmpty()) {
@@ -618,8 +649,8 @@ public class TripActivity extends AccountBasedActivity {
                     binding.status.setText(getString(R.string.status_finished));
                     binding.status.setTextColor(getColor(R.color.blue));
                     break;
-                case Starting:
-                    binding.status.setText(getString(R.string.status_starting));
+                case Started:
+                    binding.status.setText(getString(R.string.status_started));
                     binding.status.setTextColor(getColor(R.color.blue));
                     break;
                 case Available:
@@ -664,6 +695,7 @@ public class TripActivity extends AccountBasedActivity {
         if(isLoading) {
             binding.progressBar.setVisibility(View.VISIBLE);
             binding.sendBt.setEnabled(false);
+            binding.deleteBt.setEnabled(false);
             binding.saveDummyBt.setEnabled(false);
         }
         else {
