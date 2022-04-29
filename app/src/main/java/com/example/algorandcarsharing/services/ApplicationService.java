@@ -140,6 +140,54 @@ public class ApplicationService implements BaseService {
     }
 
     /**
+     * Cancel the participation to the trip
+     *
+     * @param trip
+     * @param creator
+     * @return
+     */
+    public Supplier<Long> deleteApplication(TripModel trip, Account creator) {
+        return () -> {
+            try {
+                Long appId = trip.id();
+                Long amount = Long.valueOf(trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.TripCost));
+
+                // delete the trip and perform a payment from the escrow
+                Transaction delete_txn = TransactionsHelper.delete_txn(client, creator.getAddress(), appId, null);
+                Transaction payment_txn = TransactionsHelper.payment_txn(client, trip.escrowAddress(), creator.getAddress(), amount, creator.getAddress());
+
+                if(!trip.isEnded()) {
+                    //if trip is not already ended, close the escrow with the deletion
+                    // group transactions an assign ids
+                    Digest gid = TxGroup.computeGroupID(delete_txn, payment_txn);
+                    delete_txn.assignGroupID(gid);
+                    payment_txn.assignGroupID(gid);
+
+                    // sign individual transactions
+                    LogicsigSignature escrowSignature = getEscrowSignature(appId).get();
+                    SignedTransaction delete_signedTxn = creator.signTransaction(delete_txn);
+                    SignedTransaction payment_signedTxn = Account.signLogicsigTransaction(escrowSignature, payment_txn);
+
+                    // send transactions
+                    String txId = TransactionsHelper.sendTransaction(client, Arrays.asList(delete_signedTxn, payment_signedTxn));
+                    PendingTransactionResponse response = TransactionsHelper.waitForConfirmation(client, txId);
+                }
+                else {
+                    SignedTransaction delete_signedTxn = creator.signTransaction(delete_txn);
+                    String txId = TransactionsHelper.sendTransaction(client, delete_signedTxn);
+                    PendingTransactionResponse response = TransactionsHelper.waitForConfirmation(client, txId);
+                }
+
+                LogHelper.log(this.getClass().getName(), String.format("Deleted Trip for app-id: %s", appId));
+                return appId;
+            }
+            catch (Exception e) {
+                throw new CompletionException(e);
+            }
+        };
+    }
+
+    /**
      * Initialize the escrow
      *
      * @param appId
@@ -296,7 +344,7 @@ public class ApplicationService implements BaseService {
     }
 
     /**
-     * Cancel the participation to the trip
+     * End the trip by starting it and closing the escrow.
      *
      * @param trip
      * @param creator
@@ -308,7 +356,7 @@ public class ApplicationService implements BaseService {
                 Long appId = trip.id();
                 Long amount = Long.valueOf(trip.getGlobalStateKey(ApplicationTripSchema.GlobalState.TripCost));
 
-                // participate to the trip and perform payment to escrow
+                // participate to the trip and perform a payment from the escrow
                 List<byte[]> args  = new ArrayList<>();
                 args.add(ApplicationTripSchema.AppMethod.StartTrip.getValue().getBytes());
 

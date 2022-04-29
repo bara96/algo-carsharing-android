@@ -1,9 +1,14 @@
 package com.example.algorandcarsharing.models;
 
+import android.view.View;
+import android.widget.EditText;
+
 import com.algorand.algosdk.v2.client.algod.GetStatus;
 import com.algorand.algosdk.v2.client.common.AlgodClient;
+import com.example.algorandcarsharing.R;
 import com.example.algorandcarsharing.constants.Constants;
 import com.example.algorandcarsharing.helpers.UtilsHelper;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
@@ -126,6 +131,85 @@ public class InsertTripModel implements ApplicationTripSchema {
         args.add(UtilsHelper.IntToBytes(this.availableSeats));
 
         return args;
+    }
+
+    public static InsertTripModel validate(View view) throws ParseException {
+        EditText creatorNameView = view.findViewById(R.id.creator_name);
+        EditText startAddressView = view.findViewById(R.id.start_address);
+        EditText endAddressView = view.findViewById(R.id.end_address);
+        EditText startDateView = view.findViewById(R.id.start_date);
+        EditText startTimeView = view.findViewById(R.id.start_time);
+        EditText endDateView = view.findViewById(R.id.end_date);
+        EditText endTimeView = view.findViewById(R.id.end_time);
+        EditText costView = view.findViewById(R.id.cost);
+        EditText availableSeatsView = view.findViewById(R.id.available_seats);
+
+        String creatorName = String.valueOf(creatorNameView.getText());
+        String startAddress = String.valueOf(startAddressView.getText());
+        String endAddress = String.valueOf(endAddressView.getText());
+        String startDate = String.valueOf(startDateView.getText());
+        String startTime = String.valueOf(startTimeView.getText());
+        String endDate = String.valueOf(endDateView.getText());
+        String endTime = String.valueOf(endTimeView.getText());
+
+        if(costView.getText().length() <= 0 || availableSeatsView.getText().length() <= 0) {
+            Snackbar.make(view, "Invalid number", Snackbar.LENGTH_LONG).show();
+            return null;
+        }
+
+        int cost = Integer.parseInt(String.valueOf(costView.getText()));
+        int availableSeats = Integer.parseInt(String.valueOf(availableSeatsView.getText()));
+
+        Date startDatetime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(startDate + " " + startTime);
+        Date endDatetime = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(endDate + " " + endTime);
+        Date now = new Date();
+
+        if (creatorName.length() <= 0) {
+            Snackbar.make(view, "Creator Name is required", Snackbar.LENGTH_LONG).show();
+            return null;
+        }
+
+        if (startAddress.length() <= 0) {
+            Snackbar.make(view, "Departure Address is required", Snackbar.LENGTH_LONG).show();
+            return null;
+        }
+
+        if (endAddress.length() <= 0) {
+            Snackbar.make(view, "Arrival Address is required", Snackbar.LENGTH_LONG).show();
+            return null;
+        }
+
+        if (startDatetime == null) {
+            Snackbar.make(view, "Start Date is invalid", Snackbar.LENGTH_LONG).show();
+            return null;
+        }
+
+        if (endDatetime == null) {
+            Snackbar.make(view, "End Date is required", Snackbar.LENGTH_LONG).show();
+            return null;
+        }
+
+        if(startDatetime.getTime() < now.getTime()) {
+            Snackbar.make(view, "Start Date must be greater than now", Snackbar.LENGTH_LONG).show();
+            return null;
+        }
+
+        if(endDatetime.getTime() < startDatetime.getTime()) {
+            Snackbar.make(view, "End Date must be greater than Start Date", Snackbar.LENGTH_LONG).show();
+            return null;
+        }
+
+        if (cost < 1000) {
+            Snackbar.make(view, "Cost cannot be less than 1000", Snackbar.LENGTH_LONG).show();
+            return null;
+        }
+
+        if (availableSeats < 0) {
+            Snackbar.make(view, "Seats cannot be 0", Snackbar.LENGTH_LONG).show();
+            return null;
+        }
+
+        return new InsertTripModel(creatorName, startAddress, endAddress, startDatetime, endDatetime, cost, availableSeats);
     }
 
     public Future<Long> datetimeToRounds(AlgodClient client, Date date) {

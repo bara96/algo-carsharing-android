@@ -1,4 +1,4 @@
-package com.example.algorandcarsharing.fragments;
+package com.example.algorandcarsharing.fragments.account;
 
 import android.view.View;
 

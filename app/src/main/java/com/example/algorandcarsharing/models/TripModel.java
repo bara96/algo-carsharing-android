@@ -5,7 +5,6 @@ import com.algorand.algosdk.util.Encoder;
 import com.algorand.algosdk.v2.client.model.Application;
 import com.algorand.algosdk.v2.client.model.ApplicationLocalState;
 import com.algorand.algosdk.v2.client.model.TealKeyValue;
-import com.example.algorandcarsharing.R;
 import com.example.algorandcarsharing.constants.ApplicationConstants;
 import com.example.algorandcarsharing.constants.Constants;
 import com.example.algorandcarsharing.helpers.LogHelper;
@@ -28,7 +27,7 @@ public class TripModel implements ApplicationTripSchema {
     public enum TripStatus {
         Available,
         Full,
-        Starting,
+        Started,
         Finished,
     }
 
@@ -114,7 +113,8 @@ public class TripModel implements ApplicationTripSchema {
      *
      * @return true if the trip is started, false otherwise
      */
-    public boolean isStarted(){
+    public boolean isEnded(){
+        // if the application is in "Started" mode it means that the escrow is closed: trip is ended
         return Integer.parseInt(this.getGlobalStateKey(GlobalState.TripState)) == (ApplicationState.Started.getValue());
     }
 
@@ -123,12 +123,12 @@ public class TripModel implements ApplicationTripSchema {
      *
      * @return true if the trip can start, false otherwise
      */
-    public boolean canStart() {
+    public boolean canEnd() {
         if(this.isEmpty()) {
             return false;
         }
-        if(this.isStarted()) {
-            // trip is already started
+        if(this.isEnded()) {
+            // trip is already ended
             return false;
         }
 
@@ -146,18 +146,21 @@ public class TripModel implements ApplicationTripSchema {
         return false;
     }
 
-    public TripStatus getStatus() {
-        if(Integer.parseInt(this.getGlobalStateKey(ApplicationTripSchema.GlobalState.TripState)) == (ApplicationTripSchema.ApplicationState.Started.getValue())) {
-            // trip is already started, no more editable
-            return TripStatus.Finished;
+    /**
+     * Check if the application trip be deleted.
+     *
+     * @return true if the trip can be deleted., false otherwise
+     */
+    public boolean canDelete() {
+        if(this.isEmpty()) {
+            return false;
         }
-        if(this.canStart()) {
-            return TripStatus.Starting;
+        if(this.isEnded()) {
+            // trip is already started
+            return true;
         }
-        if(Integer.parseInt(this.getGlobalStateKey(ApplicationTripSchema.GlobalState.AvailableSeats)) == 0) {
-            return TripStatus.Full;
-        }
-        return TripStatus.Available;
+
+        return this.canUpdate();
     }
 
     /**
@@ -166,11 +169,11 @@ public class TripModel implements ApplicationTripSchema {
      *
      * @return true if the Trip can be edited, false otherwise
      */
-    public boolean isEditable() {
+    public boolean canUpdate() {
         int maxSeats = Integer.parseInt(this.getGlobalStateKey(ApplicationTripSchema.GlobalState.MaxParticipants));
         int availableSeats = Integer.parseInt(this.getGlobalStateKey(ApplicationTripSchema.GlobalState.AvailableSeats));
 
-        return !this.canStart() && maxSeats == availableSeats;
+        return !this.canEnd() && maxSeats == availableSeats;
     }
 
     /**
@@ -182,6 +185,20 @@ public class TripModel implements ApplicationTripSchema {
     public boolean isParticipating() {
         String isParticipating = this.getLocalStateKey(LocalState.IsParticipating);
         return Objects.equals(isParticipating, "1");
+    }
+
+    public TripStatus getStatus() {
+        if(Integer.parseInt(this.getGlobalStateKey(ApplicationTripSchema.GlobalState.TripState)) == (ApplicationTripSchema.ApplicationState.Started.getValue())) {
+            // trip is already started, no more editable
+            return TripStatus.Finished;
+        }
+        if(this.canEnd()) {
+            return TripStatus.Started;
+        }
+        if(Integer.parseInt(this.getGlobalStateKey(ApplicationTripSchema.GlobalState.AvailableSeats)) == 0) {
+            return TripStatus.Full;
+        }
+        return TripStatus.Available;
     }
 
     public String getGlobalStateKey(GlobalState key) {

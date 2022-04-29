@@ -77,9 +77,9 @@ public interface ApplicationTripSchema {
 
     // internal application states
     public enum ApplicationState {
-        NotInitialized(0),
-        Initialized(1),
-        Started(2);
+        NotInitialized(0),  // application created, escrow not created
+        Initialized(1),     // both application and escrow are initialized
+        Started(2);         // escrow is closed and application is no more editable
 
         private final Integer value;
 

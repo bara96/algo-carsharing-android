@@ -8,10 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.example.algorandcarsharing.databinding.FragmentAccountBinding;
-import com.example.algorandcarsharing.fragments.AccountBasedFragment;
 import com.example.algorandcarsharing.helpers.LogHelper;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -25,8 +23,6 @@ public class AccountFragment extends AccountBasedFragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        AccountViewModel accountViewModel = new ViewModelProvider(this).get(AccountViewModel.class);
-
         binding = FragmentAccountBinding.inflate(inflater, container, false);
         rootView = binding.getRoot();
 
@@ -71,9 +67,6 @@ public class AccountFragment extends AccountBasedFragment {
                         performRefresh();
                     }
                 });
-
-        // accountViewModel.getBalance().observe(getViewLifecycleOwner(), balanceTextView::setText);
-        // accountViewModel.getAddress().observe(getViewLifecycleOwner(), addressEditText::setText);
         return rootView;
     }
 

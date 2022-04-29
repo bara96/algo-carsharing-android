@@ -12,6 +12,7 @@ import com.example.algorandcarsharing.services.AccountService;
 import com.example.algorandcarsharing.services.ApplicationService;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 public class AccountModel {
@@ -107,6 +108,21 @@ public class AccountModel {
             return this.account.getAddress().toString();
         }
         return null;
+    }
+
+    public boolean isCreator(Long appId) {
+        if(appId == null) {
+            return false;
+        }
+        if(this.account != null && this.accountInfo != null) {
+            List<Application> createdApps = this.accountInfo.createdApps;
+            for (int i=0; i < createdApps.size(); i++) {
+                if(Objects.equals(createdApps.get(i).id, appId)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public ApplicationLocalState getAppLocalState(Long appId) {
