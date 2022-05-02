@@ -7,7 +7,7 @@ public interface ApplicationTripSchema {
 
     // global state fields
     public static StateSchema getGlobalStateSchema() {
-        return new StateSchema(7, 7);
+        return new StateSchema(6, 7);
     }
 
     public enum GlobalState {
