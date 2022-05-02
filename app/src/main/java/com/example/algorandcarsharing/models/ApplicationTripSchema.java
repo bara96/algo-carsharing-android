@@ -58,6 +58,7 @@ public interface ApplicationTripSchema {
     // available app methods
     public enum AppMethod {
         InitializeEscrow("initializeEscrow"),
+        FundEscrow("fundEscrow"),
         UpdateTrip("updateTrip"),
         CancelTrip("cancelTrip"),
         StartTrip("startTrip"),
@@ -78,8 +79,9 @@ public interface ApplicationTripSchema {
     // internal application states
     public enum ApplicationState {
         NotInitialized(0),  // application created, escrow not created
-        Initialized(1),     // both application and escrow are initialized
-        Started(2);         // escrow is closed and application is no more editable
+        Initialized(1),     // both application and escrow are initialized, escrow not funded
+        Ready(2),     // both application and escrow are initialized, escrow funded
+        Finished(3);         // escrow is closed and application is no more editable
 
         private final Integer value;
 
