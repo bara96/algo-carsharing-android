@@ -257,6 +257,11 @@ txn NumAppArgs
 int 10
 ==
 assert
+txn Sender
+byte "creator"
+app_global_get
+==
+assert
 byte "available_seats"
 app_global_get
 byte "max_participants"
