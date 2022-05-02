@@ -60,7 +60,6 @@ public interface ApplicationTripSchema {
         InitializeEscrow("initializeEscrow"),
         FundEscrow("fundEscrow"),
         UpdateTrip("updateTrip"),
-        CancelTrip("cancelTrip"),
         StartTrip("startTrip"),
         Participate("participateTrip"),
         CancelParticipation("cancelParticipation");
