@@ -96,6 +96,10 @@ byte "departure_date_round"
 app_global_get
 >=
 &&
+global GroupSize
+int 2
+==
+&&
 assert
 gtxn 1 TypeEnum
 int pay
