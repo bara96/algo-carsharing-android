@@ -9,12 +9,14 @@ import androidx.annotation.NonNull;
 
 import com.algorand.algosdk.v2.client.model.Application;
 import com.example.algorandcarsharing.R;
+import com.example.algorandcarsharing.comparator.TripComparator;
 import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.models.GenericApplication;
 import com.example.algorandcarsharing.models.TripModel;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -94,6 +96,7 @@ public class CreatedTripsFragment extends TripsBasedFragment {
                     LogHelper.error("searchApplications", e);
                 }
         }
+        validApplications.sort(new TripComparator());
         return validApplications;
     }
 }
