@@ -140,7 +140,7 @@ public class ApplicationService implements BaseService {
     }
 
     /**
-     * Cancel the participation to the trip
+     * Delete the application and close the escrow if needed
      *
      * @param trip
      * @param creator
