@@ -213,11 +213,24 @@ public class ApplicationService implements BaseService {
                 PendingTransactionResponse response = TransactionsHelper.waitForConfirmation(client, txId);
 
                 // fund escrow
+                List<byte[]> args_fund  = new ArrayList<>();
+                args_fund.add(ApplicationTripSchema.AppMethod.FundEscrow.getValue().getBytes());
+
+                Transaction call_txn = TransactionsHelper.noop_txn(client, appId, creator.getAddress(), args_fund);
                 Transaction payment_txn = TransactionsHelper.payment_txn(client, creator.getAddress(), escrowAddress, TransactionsHelper.escrowMinBalance, null);
+
+                // group transactions an assign ids
+                Digest gid = TxGroup.computeGroupID(call_txn, payment_txn);
+                call_txn.assignGroupID(gid);
+                payment_txn.assignGroupID(gid);
+
+                // sign individual transactions
+                SignedTransaction call_signedTxn = creator.signTransaction(call_txn);
                 SignedTransaction payment_signedTxn = creator.signTransaction(payment_txn);
 
-                String payment_txId = TransactionsHelper.sendTransaction(client, payment_signedTxn);
-                PendingTransactionResponse payment_response = TransactionsHelper.waitForConfirmation(client, payment_txId);
+                // send transactions
+                String txId_fund = TransactionsHelper.sendTransaction(client, Arrays.asList(call_signedTxn, payment_signedTxn));
+                PendingTransactionResponse response_fund = TransactionsHelper.waitForConfirmation(client, txId_fund);
 
                 LogHelper.log(this.getClass().getName(), String.format("Escrow initialized for app-id %s with address: %s", appId, escrowAddress));
                 return appId;

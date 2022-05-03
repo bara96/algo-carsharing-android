@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 
 import com.algorand.algosdk.v2.client.model.Transaction;
 import com.example.algorandcarsharing.R;
+import com.example.algorandcarsharing.comparator.TripComparator;
 import com.example.algorandcarsharing.helpers.LogHelper;
 import com.example.algorandcarsharing.models.GenericApplication;
 import com.example.algorandcarsharing.models.TripModel;
@@ -115,6 +116,7 @@ public class HomeFragment extends TripsBasedFragment {
             }
         }
         futureList.forEach(CompletableFuture::join);
+        validApplications.sort(new TripComparator());
         return validApplications;
     }
 

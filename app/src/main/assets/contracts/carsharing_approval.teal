@@ -2,11 +2,11 @@
 txn ApplicationID
 int 0
 ==
-bnz main_l20
+bnz main_l22
 txn OnCompletion
 int OptIn
 ==
-bnz main_l19
+bnz main_l21
 txn OnCompletion
 int NoOp
 ==
@@ -32,7 +32,7 @@ app_global_get
 ==
 byte "trip_state"
 app_global_get
-int 2
+int 3
 ==
 ||
 &&
@@ -50,7 +50,7 @@ app_global_get
 &&
 byte "trip_state"
 app_global_get
-int 2
+int 3
 ==
 !
 &&
@@ -59,28 +59,32 @@ main_l8:
 txna ApplicationArgs 0
 byte "initializeEscrow"
 ==
-bnz main_l18
+bnz main_l20
+txna ApplicationArgs 0
+byte "fundEscrow"
+==
+bnz main_l19
 txna ApplicationArgs 0
 byte "updateTrip"
 ==
-bnz main_l17
+bnz main_l18
 txna ApplicationArgs 0
 byte "participateTrip"
 ==
-bnz main_l16
+bnz main_l17
 txna ApplicationArgs 0
 byte "cancelParticipation"
 ==
-bnz main_l15
+bnz main_l16
 txna ApplicationArgs 0
 byte "startTrip"
 ==
-bnz main_l14
+bnz main_l15
 err
-main_l14:
+main_l15:
 byte "trip_state"
 app_global_get
-int 1
+int 2
 ==
 txn Sender
 byte "creator"
@@ -91,6 +95,10 @@ global Round
 byte "departure_date_round"
 app_global_get
 >=
+&&
+global GroupSize
+int 2
+==
 &&
 assert
 gtxn 1 TypeEnum
@@ -108,16 +116,16 @@ app_global_get
 &&
 assert
 byte "trip_state"
-int 2
+int 3
 app_global_put
 int 1
 return
 int 1
 return
-main_l15:
+main_l16:
 byte "trip_state"
 app_global_get
-int 1
+int 2
 ==
 txn Sender
 byte "creator"
@@ -179,10 +187,10 @@ int 1
 return
 int 1
 return
-main_l16:
+main_l17:
 byte "trip_state"
 app_global_get
-int 1
+int 2
 ==
 txn Sender
 byte "creator"
@@ -248,9 +256,14 @@ int 1
 app_local_put
 int 1
 return
-main_l17:
+main_l18:
 txn NumAppArgs
 int 10
+==
+assert
+txn Sender
+byte "creator"
+app_global_get
 ==
 assert
 byte "available_seats"
@@ -262,7 +275,6 @@ byte "trip_state"
 app_global_get
 int 2
 ==
-!
 &&
 assert
 byte "creator_name"
@@ -318,7 +330,49 @@ int 0
 assert
 int 1
 return
-main_l18:
+main_l19:
+byte "trip_state"
+app_global_get
+int 1
+==
+assert
+txn Sender
+byte "creator"
+app_global_get
+==
+assert
+global GroupSize
+int 2
+==
+assert
+gtxn 1 TypeEnum
+int pay
+==
+gtxn 1 Receiver
+byte "escrow_address"
+app_global_get
+==
+&&
+gtxn 1 Amount
+int 1000000
+==
+&&
+gtxn 1 Sender
+gtxn 0 Sender
+==
+&&
+assert
+byte "trip_state"
+int 2
+app_global_put
+int 1
+return
+main_l20:
+byte "trip_state"
+app_global_get
+int 0
+==
+assert
 int 0
 byte "escrow_address"
 app_global_get_ex
@@ -345,7 +399,12 @@ int 1
 app_global_put
 int 1
 return
-main_l19:
+main_l21:
+byte "trip_state"
+app_global_get
+int 2
+==
+assert
 txn Sender
 byte "creator"
 app_global_get
@@ -354,7 +413,7 @@ app_global_get
 assert
 byte "trip_state"
 app_global_get
-int 1
+int 2
 ==
 assert
 global Round
@@ -369,7 +428,7 @@ int 0
 assert
 int 1
 return
-main_l20:
+main_l22:
 txn NumAppArgs
 int 9
 ==

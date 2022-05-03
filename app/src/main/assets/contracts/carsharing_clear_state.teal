@@ -1,3 +1,8 @@
 #pragma version 5
+byte "trip_state"
+app_global_get
+int 3
+==
+assert
 int 1
 return

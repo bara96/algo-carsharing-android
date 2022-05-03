@@ -6,7 +6,6 @@ import com.algorand.algosdk.v2.client.model.Application;
 import com.algorand.algosdk.v2.client.model.ApplicationLocalState;
 import com.algorand.algosdk.v2.client.model.TealKeyValue;
 import com.example.algorandcarsharing.constants.ApplicationConstants;
-import com.example.algorandcarsharing.constants.Constants;
 import com.example.algorandcarsharing.helpers.LogHelper;
 
 import java.security.NoSuchAlgorithmException;
@@ -85,13 +84,7 @@ public class TripModel implements ApplicationTripSchema {
         String clearStateProgram = this.application.params.clearStateProgram();
 
         if(!approvalProgram.equals(ApplicationConstants.approvalProgramHash)) {
-            if(Constants.development) {
-                if(!approvalProgram.equals(ApplicationConstants.approvalProgramHashTest)) {
-                    return false;
-                }
-            }
-            else return false;
-
+            return false;
         }
         if(!clearStateProgram.equals(ApplicationConstants.clearStateProgramHash)) {
             return false;
@@ -115,7 +108,7 @@ public class TripModel implements ApplicationTripSchema {
      */
     public boolean isEnded(){
         // if the application is in "Started" mode it means that the escrow is closed: trip is ended
-        return Integer.parseInt(this.getGlobalStateKey(GlobalState.TripState)) == (ApplicationState.Started.getValue());
+        return Integer.parseInt(this.getGlobalStateKey(GlobalState.TripState)) == (ApplicationState.Finished.getValue());
     }
 
     /**
@@ -188,7 +181,7 @@ public class TripModel implements ApplicationTripSchema {
     }
 
     public TripStatus getStatus() {
-        if(Integer.parseInt(this.getGlobalStateKey(ApplicationTripSchema.GlobalState.TripState)) == (ApplicationTripSchema.ApplicationState.Started.getValue())) {
+        if(Integer.parseInt(this.getGlobalStateKey(ApplicationTripSchema.GlobalState.TripState)) == (ApplicationTripSchema.ApplicationState.Finished.getValue())) {
             // trip is already started, no more editable
             return TripStatus.Finished;
         }
