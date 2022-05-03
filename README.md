@@ -18,7 +18,25 @@ To start the **Testnet** sandbox:
 - `./sandbox up testnet`
 
 On testnet the indexer is not enabled, in order to use it you can switch on release sandbox:
-- `./sandbox up release`
+- `./sandbox up release`  
+
+*Note*: a working indexer instance is required to use this application.  
+
+## Account Setup
+In order to use the application a valid Algorand Account must be provided.  
+You can generate a new account with [goal](https://developer.algorand.org/docs/clis/goal/goal/) CLI:  
+- `./sandbox goal account new`  
+
+Remember to [fund the account](https://developer.algorand.org/docs/sdks/go/?from_query=fund#fund-account) if you're using a public network.  
+If you're using a private network you can export an already funded account in this way:  
+- `./sandbox goal account list`  
+- `./sandbox goal account export -a {address}`  
+
+Save the mnemonic and paste it on the Account section of the app to set the user.  
+
+## Smart Contracts
+The Smart Contracts already compiled are stored in the [assets](app/src/main/assets/contracts) folder.  
+You can find the original PyTEAL version on the [Python version](https://github.com/bara96/algo-carsharing-python/tree/master/smart_contracts).  
 
 ## Environment and dependencies
 - For this project an Android emulator with `API 30` are used
