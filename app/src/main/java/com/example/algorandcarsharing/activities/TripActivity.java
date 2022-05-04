@@ -671,6 +671,7 @@ public class TripActivity extends AccountBasedActivity {
                     else {
                         binding.status.setText(getString(R.string.status_full));
                         binding.status.setTextColor(getColor(R.color.red));
+                        binding.sendBt.setEnabled(false);
                     }
                     break;
                 default:

@@ -116,7 +116,7 @@ public class HomeFragment extends TripsBasedFragment {
             }
         }
         futureList.forEach(CompletableFuture::join);
-        validApplications.sort(new TripComparator());
+        validApplications.sort(new TripComparator().reversed());
         return validApplications;
     }
 

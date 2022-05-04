@@ -96,7 +96,7 @@ public class CreatedTripsFragment extends TripsBasedFragment {
                     LogHelper.error("searchApplications", e);
                 }
         }
-        validApplications.sort(new TripComparator());
+        validApplications.sort(new TripComparator().reversed());
         return validApplications;
     }
 }

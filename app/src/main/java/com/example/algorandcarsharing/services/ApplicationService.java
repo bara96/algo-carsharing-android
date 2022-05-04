@@ -140,7 +140,7 @@ public class ApplicationService implements BaseService {
     }
 
     /**
-     * Cancel the participation to the trip
+     * Delete the application and close the escrow if needed
      *
      * @param trip
      * @param creator
@@ -326,7 +326,7 @@ public class ApplicationService implements BaseService {
                     LogHelper.log(this.getClass().getName(), String.format("Opted-in to app-id: %s", appId));
                 }
 
-                // participate to the trip and perform payment to escrow
+                // cancel participation to the trip and perform refund
                 List<byte[]> args  = new ArrayList<>();
                 args.add(ApplicationTripSchema.AppMethod.CancelParticipation.getValue().getBytes());
 
