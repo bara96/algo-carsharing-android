@@ -40,3 +40,49 @@ You can find the original PyTEAL version on the [Python version](https://github.
 
 ## Environment and dependencies
 - For this project an Android emulator with `API 30` are used
+
+## Android Application
+
+### Application Overview
+
+https://user-images.githubusercontent.com/32300242/166680560-f4821b22-011d-4b8d-a09f-a5bd8bae6335.mp4
+
+### Create a new trip
+
+https://user-images.githubusercontent.com/32300242/166681325-d8493c09-2b1a-4ffc-b9f0-f1f039bc0750.mp4
+
+### Update a trip
+
+https://user-images.githubusercontent.com/32300242/166681399-ebfefaee-bace-4b14-aa5d-eeab57cca0d6.mp4
+
+### Delete a trip
+
+https://user-images.githubusercontent.com/32300242/166681506-208c5202-64f7-4653-a37d-52fbf6d9e5dd.mp4
+
+### Terminate a trip
+
+https://user-images.githubusercontent.com/32300242/166681549-5f3e6480-f712-4d12-8870-53aa6461eea5.mp4
+
+### Join a trip
+
+https://user-images.githubusercontent.com/32300242/166681607-d4f3f812-8d5c-45ad-96a1-29d38228515b.mp4
+
+
+### Leave a trip
+
+https://user-images.githubusercontent.com/32300242/166681639-fe900ba5-842d-47eb-9c74-b231f6d785aa.mp4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
