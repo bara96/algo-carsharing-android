@@ -3,6 +3,9 @@ Smart Contract developed in [PyTeal](https://developer.algorand.org/docs/get-det
 Application developed in Java.  
 Linked to [Algorand Carsharing Python](https://github.com/bara96/algo-carsharing-python) project.  
 
+This is a project developed for my Master's Degree in Computer Science.  
+Feel free to [read the thesis](https://github.com/bara96/algo-carsharing-android/wiki) if you want to achieve a better knowledge on the work done.  
+
 # Requirements
 - [Android studio 4.1 or higher](https://developer.android.com/studio)
 - [Java SDK 1.8.0 or higher](https://www.oracle.com/java/technologies/downloads/)
